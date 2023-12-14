@@ -22,7 +22,7 @@ const HomeScreen:React.FC<ScreenProps> = ({navigation}) => {
         }, 5000);
         return () => clearInterval(tick); 
     }, []);
-
+    
     return(
         <SafeAreaView style={{
             flex:1,

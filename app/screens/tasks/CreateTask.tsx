@@ -1,20 +1,29 @@
-import { useState } from "react";
+import React, { Dispatch, SetStateAction, useState } from "react";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../../types";
-import { SafeAreaView, TextInput, Text, View, StyleSheet, TouchableOpacity } from "react-native";
+import { SafeAreaView, TextInput, Text, View, StyleSheet, TouchableOpacity, TextInputBase } from "react-native";
 import Spacing from "../../../config/Spacing";
 import Theme from "../../../config/Theme";
-import { Feather, MaterialCommunityIcons, Entypo, MaterialIcons } from '@expo/vector-icons';
+import { Feather, MaterialCommunityIcons, Entypo, MaterialIcons, AntDesign } from '@expo/vector-icons';
+import { BlurView } from 'expo-blur';
 import { format } from "date-fns";
 
 
 type ScreenProps = NativeStackScreenProps<RootStackParamList, 'CreateTask'>;
+
+type PriorityProps = {
+    priority:number,
+    onSetPriority:Dispatch<SetStateAction<number>>,
+    onSetPriorityOpen:Dispatch<SetStateAction<boolean>>,
+}
 
 const CreateTaskScreen:React.FC<ScreenProps> = ({navigation, route}) => {
 
     const [title, setTitle] = useState<string>("Nom de la tâche");
     const [inputValues, setInputValues] = useState<string>('');
     const [date, setDate] = useState<string>(route.params.date);
+    const [ priority, setPriority ] = useState<number>(1);
+    const [priorityIsOpen, setPriorityIsOPen] = useState<boolean>(false);
 
     return(
         <SafeAreaView style={{
@@ -87,12 +96,12 @@ const CreateTaskScreen:React.FC<ScreenProps> = ({navigation, route}) => {
                     </View>
                     <Text style={styles.tips}>0</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.items}>
+                <TouchableOpacity style={styles.items} onPress={() => setPriorityIsOPen(true)}>
                     <View style={styles.flex}>
                         <MaterialCommunityIcons style={{marginRight:6}} name="priority-high" size={20} color={Theme.primary} />
                         <Text style={styles.itemText}>Priorité</Text>
                     </View>
-                    <Text style={styles.tips} >1</Text>
+                    <Text style={styles.tips} >{priority}</Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.items}>
                     <View style={styles.flex}>
@@ -101,8 +110,175 @@ const CreateTaskScreen:React.FC<ScreenProps> = ({navigation, route}) => {
                     </View>
                 </TouchableOpacity>
             </View>
+            <View style={{
+                position:'absolute',
+                width:'100%',
+                bottom:0,
+                flexDirection:'row',
+                alignItems:"center",
+                justifyContent:"space-between",
+            }}>
+                <TouchableOpacity onPress={() => navigation.goBack()} style={styles.button}>
+                    <Text style={styles.btnText}>annuler</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.button}>
+                    <Text style={[styles.btnText, {color:Theme.primary}]}>confirmer</Text>
+                </TouchableOpacity>
+            </View>
+            {
+                priorityIsOpen && 
+                    <Priorities 
+                        priority={priority} 
+                        onSetPriority={setPriority}
+                        onSetPriorityOpen={setPriorityIsOPen}
+                    />
+            }
         </SafeAreaView>
     );
+}
+
+const Priorities: React.FC<PriorityProps> = ({priority, onSetPriority, onSetPriorityOpen}) => {
+
+    let plus:number = priority+1;
+    let minus:number = priority-1;
+
+    return (
+        <BlurView intensity={10} tint="dark" style={{
+            position:"absolute",
+            width:'100%',
+            height:'100%',
+            alignItems:"center",
+            justifyContent:"center",
+        }}>
+            <View style={{
+                width:300,
+                backgroundColor:Theme.darkConstart,
+                borderRadius:16,
+                elevation:10
+            }}>
+                <View style={{
+                    padding:16,
+                    borderBottomWidth:1,
+                    borderBottomColor:Theme.darkSecondary,
+                }}>
+                    <Text style={{
+                        textAlign:"center",
+                        fontSize: Spacing * 1.6,
+                        color: Theme.white
+                    }}>
+                        Sélectionner la priorité
+                    </Text>
+                </View>
+                <View style={{
+                    flexDirection:'row',
+                    justifyContent:"center",
+                    alignItems:"center",
+                    padding:10,
+                }}>
+                    <TouchableOpacity 
+                        onPress={() => {
+                            if(priority < 999){
+                                onSetPriority(plus)
+                            }
+                        }}
+                        style={[styles.priorityButton, {
+                            borderTopLeftRadius:8,
+                            borderBottomLeftRadius:8
+                        }]}>
+                        <AntDesign name="plus" size={20} color={Theme.white} />
+                    </TouchableOpacity>
+                    <TextInput style={{
+                        backgroundColor:Theme.darkSecondary,
+                        width:60,
+                        height:56,
+                        color:Theme.white,
+                        fontSize:Spacing * 2,
+                        textAlign:"center",
+                        borderWidth:1,
+                        borderColor:Theme.darkConstart
+                    }}
+                        value={priority.toString()}
+                        onChangeText={(text) => {
+                            onSetPriority(+text);
+                        }}
+                        keyboardType="numeric"
+                    />
+                    <TouchableOpacity 
+                        onPress={() => {
+                            if(priority === 0){
+                                onSetPriority(0);
+                            } else {
+                                onSetPriority(minus);
+                            }
+                        }}
+                        style={[styles.priorityButton, {
+                            borderTopRightRadius:8,
+                            borderBottomRightRadius:8
+                        }]}>
+                        <AntDesign name="minus" size={24} color={Theme.white} />
+                    </TouchableOpacity>
+                </View>
+                <View style={{
+                    justifyContent: "center",
+                    alignItems:"center",
+                    width:'100%',
+                }}>
+                    <TouchableOpacity
+                        onPress={() => {
+                            onSetPriority(1);
+                        }}
+                        style={[styles.tips, {
+                            width:100,
+                            flexDirection:"row",
+                            alignItems:"center",
+                            justifyContent:"center",
+                            marginVertical:Spacing,
+                        }]}>
+                        <Text style={{
+                            color: Theme.primary,
+                            textAlign:"center"
+                        }}>Default 1</Text>
+                        <MaterialCommunityIcons name="priority-high" size={16} color={Theme.primary} />
+                    </TouchableOpacity>
+                </View>
+                <View style={{
+                    padding:Spacing * 1.6,
+                    borderTopWidth:1,
+                    borderBottomWidth:1,
+                    borderColor:Theme.darkSecondary
+                }}>
+                    <Text style={{
+                        fontSize:Spacing * 1.2,
+                        color:Theme.text,
+                        textAlign:"center"
+                    }}>Les activitées de priorité supérieur seront affichées en premier dans la liste.</Text>
+                </View>
+                <View style={[styles.flex]}>
+                    <TouchableOpacity
+                        onPress={() => {
+                            onSetPriority(1)
+                            onSetPriorityOpen(false)
+                        }}
+                        style={[styles.button, {
+                            borderBottomLeftRadius:16
+                        }]}>
+                        <Text style={styles.btnText}>fermer</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                        onPress={() => {
+                            onSetPriority(priority);
+                            onSetPriorityOpen(false);
+                        }}
+                        style={[styles.button, {
+                            borderBottomRightRadius:16
+                        }]}>
+                        <Text style={[styles.btnText, {color:Theme.primary}]}>confirmer</Text>
+                    </TouchableOpacity>
+                </View>
+            </View>
+        </BlurView>
+    );
+
 }
 
 
@@ -129,6 +305,26 @@ const styles = StyleSheet.create({
     flex:{
         flexDirection:"row",
         alignItems:"center",
+    },
+    button: {
+        backgroundColor:Theme.darkSecondary,
+        padding:14,
+        width:"50%"
+    },
+    btnText: {
+        fontSize: Spacing * 1.6,
+        color: Theme.text,
+        textTransform: "uppercase",
+        textAlign:"center",
+    },
+    priorityButton: {
+        width:56,
+        height:56,
+        backgroundColor:Theme.darkSecondary,
+        alignItems:"center",
+        justifyContent:"center",
+        borderWidth:1,
+        borderColor:Theme.darkConstart
     }
 })
 
