@@ -1,21 +1,16 @@
-import React, { Dispatch, SetStateAction, useState } from "react";
+import React, { useState } from "react";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
-import { RootStackParamList } from "../../../types";
-import { SafeAreaView, TextInput, Text, View, StyleSheet, TouchableOpacity, TextInputBase } from "react-native";
-import Spacing from "../../../config/Spacing";
-import Theme from "../../../config/Theme";
+import { DatePickerProps, PriorityProps, RootStackParamList } from "../../../types";
+import { SafeAreaView, TextInput, Text, View, StyleSheet, TouchableOpacity, Platform, useColorScheme } from "react-native";
+import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { Feather, MaterialCommunityIcons, Entypo, MaterialIcons, AntDesign } from '@expo/vector-icons';
 import { BlurView } from 'expo-blur';
 import { format } from "date-fns";
-
+import fr from "date-fns/locale/fr";
+import Spacing from "../../../config/Spacing";
+import Theme from "../../../config/Theme";
 
 type ScreenProps = NativeStackScreenProps<RootStackParamList, 'CreateTask'>;
-
-type PriorityProps = {
-    priority:number,
-    onSetPriority:Dispatch<SetStateAction<number>>,
-    onSetPriorityOpen:Dispatch<SetStateAction<boolean>>,
-}
 
 const CreateTaskScreen:React.FC<ScreenProps> = ({navigation, route}) => {
 
@@ -24,7 +19,8 @@ const CreateTaskScreen:React.FC<ScreenProps> = ({navigation, route}) => {
     const [date, setDate] = useState<string>(route.params.date);
     const [ priority, setPriority ] = useState<number>(1);
     const [priorityIsOpen, setPriorityIsOPen] = useState<boolean>(false);
-
+    const [showCalendar, setShowCalendar] = useState<boolean>(false);
+    
     return(
         <SafeAreaView style={{
             flex:1,
@@ -69,7 +65,9 @@ const CreateTaskScreen:React.FC<ScreenProps> = ({navigation, route}) => {
                     </View>
                     <Text>Tâche</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.items}>
+                <TouchableOpacity 
+                    onPress={()  => setShowCalendar(true)}
+                    style={styles.items}>
                     <View style={styles.flex}>
                         <Feather style={{marginRight:6}} name="calendar" size={20} color={Theme.primary} />
                         <Text style={styles.itemText}>Date</Text>
@@ -133,6 +131,7 @@ const CreateTaskScreen:React.FC<ScreenProps> = ({navigation, route}) => {
                         onSetPriorityOpen={setPriorityIsOPen}
                     />
             }
+            { showCalendar && <DatePicker onSetDate={setDate} onSetShowCalendar={setShowCalendar} /> }
         </SafeAreaView>
     );
 }
@@ -281,6 +280,26 @@ const Priorities: React.FC<PriorityProps> = ({priority, onSetPriority, onSetPrio
 
 }
 
+const DatePicker: React.FC<DatePickerProps> = ({onSetDate, onSetShowCalendar}) => {
+
+    const onChange = (event: DateTimePickerEvent, selectedDate?: Date) => {
+        if (Platform.OS === 'android') {
+          onSetShowCalendar(false);
+          onSetDate(format(selectedDate!, 'PPP', {locale:fr}))
+        }
+        if (event.type === 'dismissed') 
+          return;
+    }
+
+    return  (
+        <DateTimePicker 
+        themeVariant="dark"
+        value={new Date}
+        accentColor={Theme.primary}
+        onChange={onChange}
+        />
+    );
+}
 
 const styles = StyleSheet.create({
     items:{
@@ -326,7 +345,6 @@ const styles = StyleSheet.create({
         borderWidth:1,
         borderColor:Theme.darkConstart
     }
-})
-
+});
 
 export default CreateTaskScreen;
