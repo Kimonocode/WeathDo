@@ -1,13 +1,20 @@
 import { Dispatch, SetStateAction } from "react";
+import { Task } from "./interfaces/Task";
 
 export type PriorityProps = {
-    priority:number,
-    onSetPriority:Dispatch<SetStateAction<number>>,
+    task:Task,
+    onSetTask:Dispatch<SetStateAction<Task>>,
     onSetPriorityOpen:Dispatch<SetStateAction<boolean>>,
 }
 
+export type ReminderProps = {
+    task:Task,
+    onSetRemindersIsOpen: React.Dispatch<React.SetStateAction<boolean>>
+}
+
 export type DatePickerProps = {
-    onSetDate: Dispatch<SetStateAction<string>>,
+    task:Task,
+    onSetTask: Dispatch<SetStateAction<Task>>,
     onSetShowCalendar: Dispatch<SetStateAction<boolean>>
 }
 
