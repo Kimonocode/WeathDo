@@ -9,6 +9,7 @@ export type PriorityProps = {
 
 export type ReminderProps = {
     task:Task,
+    onSetTask:Dispatch<SetStateAction<Task>>,
     onSetRemindersIsOpen: React.Dispatch<React.SetStateAction<boolean>>
 }
 

@@ -1,4 +1,4 @@
-import { Reminders } from "./Reminders";
+import { Reminder } from "./Reminder";
 
 export interface Task {
     title:string;
@@ -7,6 +7,6 @@ export interface Task {
     description:string | null;
     date: Date | string
     completed:boolean;
-    reminders:Reminders[];
+    reminders:Reminder[];
     list:string[];
 }

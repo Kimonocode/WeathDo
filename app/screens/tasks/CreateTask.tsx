@@ -11,6 +11,7 @@ import {
     Platform, 
     Image
 } from "react-native";
+import { RadioButton } from 'react-native-paper';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { Feather, MaterialCommunityIcons, Entypo, MaterialIcons, AntDesign } from '@expo/vector-icons';
 import { BlurView } from 'expo-blur';
@@ -20,6 +21,7 @@ import Spacing from "../../../config/Spacing";
 import Theme from "../../../config/Theme";
 import { Task } from "../../../types/interfaces/Task";
 import { capitalize } from "../../../functions/strings";
+import { Reminder } from "../../../types/interfaces/Reminder";
 
 type ScreenProps = NativeStackScreenProps<RootStackParamList, 'CreateTask'>;
 
@@ -149,7 +151,7 @@ const CreateTaskScreen:React.FC<ScreenProps> = ({navigation, route}) => {
                     />
             }
             { calendarIsOpen && <DatePicker task={task} onSetTask={setTask} onSetShowCalendar={setCalendarIsOpen} /> }
-            { remindersIsOpen && <Reminders task={task} onSetRemindersIsOpen={setRemindersIsOpen}/>}
+            { remindersIsOpen && <Reminders task={task} onSetTask={setTask} onSetRemindersIsOpen={setRemindersIsOpen}/>}
         </SafeAreaView>
     );
 }
@@ -265,12 +267,39 @@ const DatePicker: React.FC<DatePickerProps> = ({task, onSetTask, onSetShowCalend
     );
 }
 
-const Reminders: React.FC<ReminderProps> = ({task, onSetRemindersIsOpen}) => {
+const Reminders: React.FC<ReminderProps> = ({task, onSetTask, onSetRemindersIsOpen}) => {
+
+    const notificationType = [
+        'silencieux', 
+        'notification', 
+        'alarme'
+    ];
+
+    const notificationInterval = [
+        'Tous les jours',
+        'Certains jours de la semaine',
+        'Jours avant'
+    ];
+
+    const [notificationIntervalChecked, setNotificationIntervalChecked] = useState<number>(0);
+    const [notificationTypeSelected, setNotificationTypeSelected] = useState<number>(0);
+
+    const [reminders, setReminders] = useState<Reminder>({
+        hour:getHours(new Date).toString(),
+        minute:'00',
+        days:[],
+        notification:{
+            type:null,
+            interval: {
+                everyDays:true,
+                someDays:false,
+                beforeDay:false
+            }
+        }
+    });
 
     const [firstStep, setFirstStep ] = useState<boolean>(true);
     const [secondStep, setSecondStep] = useState<boolean>(false);
-    const [hourInputValue, setHourInputValue] = useState<string>((getHours(new Date) + 1).toString())
-    const [minuteInputValue, setMinuteInputValue] = useState<string>('00')
 
     return (
         <BlurView intensity={10} tint="dark" style={styles.blurView}>
@@ -321,16 +350,16 @@ const Reminders: React.FC<ReminderProps> = ({task, onSetRemindersIsOpen}) => {
             { secondStep && (
                 <View style={styles.modal}>
                     <View style={styles.modalHeader}>
-                                <Text style={styles.modalHeaderText}>
-                                    Nouveau Rappel
-                                </Text>
+                        <Text style={styles.modalHeaderText}>
+                            Nouveau Rappel
+                        </Text>
                     </View>
-                    <View style={[styles.flex, {justifyContent:"center", padding:Spacing}]}>
+                    <View style={[styles.flex, {justifyContent:"center", padding:Spacing, borderBottomWidth:1, borderBottomColor:Theme.darkSecondary}]}>
                         <View>
                             <TextInput
                             maxLength={2}
-                            onChangeText={text => setHourInputValue(text)}
-                            value={hourInputValue.toString()}
+                            onChangeText={text => setReminders({...reminders,hour:text})}
+                            value={reminders.hour}
                             keyboardType="numeric"
                             style={[styles.modalNumericInputs, {borderRadius:8}]}
                             />
@@ -352,8 +381,8 @@ const Reminders: React.FC<ReminderProps> = ({task, onSetRemindersIsOpen}) => {
                         <View>
                             <TextInput
                                 maxLength={2}
-                                onChangeText={text => {setMinuteInputValue(text)}}
-                                value={minuteInputValue.toString()}
+                                onChangeText={text => {setReminders({...reminders, minute: text})}}
+                                value={reminders.minute}
                                 keyboardType="numeric"
                                 style={[styles.modalNumericInputs, {borderRadius:8}]}
                             />
@@ -362,6 +391,120 @@ const Reminders: React.FC<ReminderProps> = ({task, onSetRemindersIsOpen}) => {
                                 color:Theme.textContrast,
                                 fontSize:Spacing * 1.2
                             }}>Minute</Text>
+                        </View>
+                    </View>
+                    <View style={{padding: Spacing, borderBottomWidth:1, borderBottomColor:Theme.darkSecondary}}>
+                        <Text style={{color:Theme.text, fontSize: Spacing * 1.6}}>
+                            Type de rappel
+                        </Text>
+                        <View style={[styles.flex, {
+                            justifyContent:"center",
+                            marginVertical:Spacing
+                        }]}>
+                        {
+                            notificationType.map((type, index) => {
+
+                                let icon;
+                                const background = notificationTypeSelected === index ? Theme.alphaPrimary : Theme.darkSecondary;
+                                const color = notificationTypeSelected === index ? Theme.primary : Theme.textContrast
+
+                                switch(type){
+                                    case 'silencieuse':
+                                        icon = <Feather name="bell-off" size={24} color={color} />
+                                    break;
+                                    case 'notification':
+                                        icon = <Feather name="bell" size={24} color={color} />
+                                    break;
+                                    default: icon = <Feather name="clock" size={24} color={color} />
+                                }
+
+                                return(
+                                    <TouchableOpacity
+                                        key={index}
+                                        onPress={() => {
+                                            setReminders({...reminders, notification: {
+                                                ...reminders.notification,
+                                                type
+                                            }})
+                                            setNotificationTypeSelected(index);
+                                        }}
+                                        style={{
+                                            backgroundColor:background,
+                                            width:'33%',
+                                            height:60,
+                                            alignItems:"center",
+                                            justifyContent:"center",
+                                            borderWidth:1,
+                                            borderColor:Theme.darkConstart,
+                                        }}>
+                                        {icon}
+                                        <Text style={{
+                                            fontSize: Spacing * 1.2,
+                                            color:color
+                                        }}>{capitalize(type)}</Text>
+                                    </TouchableOpacity>
+                                )
+                            })
+                        }
+                        </View>
+                    </View>
+                    <View style={{padding: Spacing}}>
+                        <Text style={{color:Theme.text, marginVertical:Spacing, fontSize:Spacing * 1.6}}>
+                            Me rappeler
+                        </Text>
+                        <View>
+                            {
+                                notificationInterval.map((interval, index) => {
+                                        return(
+                                        <View style={styles.flex} key={index}>
+                                            <RadioButton
+                                                color={Theme.primary}
+                                                value="first"
+                                                status={ index === notificationIntervalChecked ? 'checked' : 'unchecked' }
+                                                onPress={() => {
+                                                    setNotificationIntervalChecked(index);
+                                                    switch(index){
+                                                       case 0: 
+                                                            setReminders({...reminders, notification: {
+                                                                ...reminders.notification,
+                                                                interval:{
+                                                                    everyDays:true,
+                                                                    someDays:false,
+                                                                    beforeDay:false
+                                                                }
+                                                            }})
+                                                        break;
+                                                        case 1:
+                                                            setReminders({...reminders, notification: {
+                                                                ...reminders.notification,
+                                                                interval:{
+                                                                    everyDays:false,
+                                                                    someDays:true,
+                                                                    beforeDay:false
+                                                                }
+                                                            }})
+                                                        break;
+                                                        case 2:
+                                                            setReminders({...reminders, notification: {
+                                                                ...reminders.notification,
+                                                                interval:{
+                                                                    everyDays:false,
+                                                                    someDays:false,
+                                                                    beforeDay:true
+                                                                }
+                                                            }})
+                                                        break;
+                                                    }
+                                                }}
+                                            />
+                                            <Text style={{
+                                                color:Theme.textContrast,
+                                                fontSize:Spacing*1.4
+                                            }}>{interval}</Text>
+                                        </View>  
+                                        )
+                                })
+                            }
                         </View>
                     </View>
                     <View style={[styles.flex]}>
