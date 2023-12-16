@@ -436,13 +436,120 @@ const Reminders: React.FC<ReminderProps> = ({
       interval: {
         everyDays: true,
         someDays: false,
-        beforeDay: false
+        beforeDay: false,
+        numberOfDayBefore:'2'
       }
     }
   });
 
   const [firstStep, setFirstStep] = useState<boolean>(true);
   const [secondStep, setSecondStep] = useState<boolean>(false);
+
+  /**
+   * Remove first modal reminder and show the second step
+   */
+  const handleAddReminder = () => {
+    setFirstStep(false);
+    setSecondStep(true);
+  }
+
+  /**
+   * Add or Remove day in days reminder list
+   * @param day 
+   */
+  const handleAddDayToReminderDaysList = (day: string) => {
+    if(reminders.days.includes(day)){
+        let newDays = [...reminders.days];
+        newDays = newDays.filter(row => row !== day);
+        setReminders({...reminders, days:newDays});
+    } else {
+        setReminders({...reminders, days: [
+            ...reminders.days, 
+            day
+        ]});
+    }
+  }
+
+  /**
+   * Checkbox Controller
+   * @param index
+   */
+  const hanldeIntervalChecked = (index:number) => {
+    setNotificationIntervalChecked(index);
+    switch (index) {
+      case 0:
+        setReminders({
+          ...reminders,
+          days:[],
+          notification: {
+            ...reminders.notification,
+            interval: {
+              numberOfDayBefore:'2',
+              everyDays: true,
+              someDays: false,
+              beforeDay: false
+            }
+          }
+        });
+        break;
+      case 1:
+        setReminders({
+          ...reminders,
+          notification: {
+            ...reminders.notification,
+            interval: {
+              numberOfDayBefore:'2',
+              everyDays: false,
+              someDays: true,
+              beforeDay: false
+            }
+          }
+        });
+        break;
+      case 2:
+        setReminders({
+          ...reminders,
+          days:[],
+          notification: {
+            ...reminders.notification,
+            interval: {
+              ...reminders.notification.interval,
+              everyDays: false,
+              someDays: false,
+              beforeDay: true
+            }
+          }
+        });
+        break;
+    }
+  }
+
+  const handleChangeNotificationType = (index:number, type:string) => {
+    setReminders({
+        ...reminders,
+        notification: {
+          ...reminders.notification,
+          type
+        }
+      });
+      setNotificationTypeSelected(index);
+  }
+
+  /**
+   * Change le nombre de jours pour lequel le rappel doit se lancer avant la date
+   * @param numberOfDay 
+   */
+  const handleChangeNumberDayBeforeReminder = (numberOfDay:string) => {
+    setReminders({
+      ...reminders, notification: {
+        ...reminders.notification,
+          interval:{
+            ...reminders.notification.interval,
+            numberOfDayBefore:numberOfDay
+          }
+        }
+    })
+  }
 
   return (
     <BlurView intensity={10} tint="dark" style={styles.blurView}>
@@ -472,10 +579,7 @@ const Reminders: React.FC<ReminderProps> = ({
           </View>
           <View>
             <TouchableOpacity
-              onPress={() => {
-                setFirstStep(false);
-                setSecondStep(true);
-              }}
+              onPress={() => handleAddReminder()}
               style={[styles.button, { width: "100%" }]}
             >
               <Text style={[styles.btnText, { color: Theme.primary }]}>
@@ -612,16 +716,7 @@ const Reminders: React.FC<ReminderProps> = ({
                 return (
                   <TouchableOpacity
                     key={index}
-                    onPress={() => {
-                      setReminders({
-                        ...reminders,
-                        notification: {
-                          ...reminders.notification,
-                          type
-                        }
-                      });
-                      setNotificationTypeSelected(index);
-                    }}
+                    onPress={() => handleChangeNotificationType(index, type)}
                     style={{
                       backgroundColor: background,
                       width: "33%",
@@ -659,8 +754,8 @@ const Reminders: React.FC<ReminderProps> = ({
             <View>
               {notificationInterval.map((interval, index) => {
                 return (
-                  <View>
-                    <View style={styles.flex} key={index}>
+                  <View key={index}>
+                    <View style={styles.flex}>
                       <RadioButton
                         color={Theme.primary}
                         value="first"
@@ -669,50 +764,7 @@ const Reminders: React.FC<ReminderProps> = ({
                             ? "checked"
                             : "unchecked"
                         }
-                        onPress={() => {
-                          setNotificationIntervalChecked(index);
-                          switch (index) {
-                            case 0:
-                              setReminders({
-                                ...reminders,
-                                notification: {
-                                  ...reminders.notification,
-                                  interval: {
-                                    everyDays: true,
-                                    someDays: false,
-                                    beforeDay: false
-                                  }
-                                }
-                              });
-                              break;
-                            case 1:
-                              setReminders({
-                                ...reminders,
-                                notification: {
-                                  ...reminders.notification,
-                                  interval: {
-                                    everyDays: false,
-                                    someDays: true,
-                                    beforeDay: false
-                                  }
-                                }
-                              });
-                              break;
-                            case 2:
-                              setReminders({
-                                ...reminders,
-                                notification: {
-                                  ...reminders.notification,
-                                  interval: {
-                                    everyDays: false,
-                                    someDays: false,
-                                    beforeDay: true
-                                  }
-                                }
-                              });
-                              break;
-                          }
-                        }}
+                        onPress={() => hanldeIntervalChecked(index)}
                       />
                       <Text
                         style={{
@@ -736,20 +788,22 @@ const Reminders: React.FC<ReminderProps> = ({
                               }
                             ]}
                           >
-                            {days.map(day => {
+                            {days.map((day, index) => {
                               return (
                                 <TouchableOpacity
+                                  key={index}
+                                  onPress={() => handleAddDayToReminderDaysList(day)}
                                   style={{
-                                    backgroundColor: Theme.darkSecondary,
+                                    backgroundColor:reminders.days.includes(day) ? Theme.alphaPrimary : Theme.darkSecondary,
                                     padding: 6,
-                                    borderColor: Theme.bgDark,
+                                    borderColor:Theme.bgDark,
                                     borderRadius: 4
                                   }}
                                 >
                                   <Text
                                     style={{
                                       fontSize: 12,
-                                      color: Theme.text
+                                      color:reminders.days.includes(day) ? Theme.primary : Theme.text
                                     }}
                                   >
                                     {day.slice(0, 3).toUpperCase()}
@@ -759,6 +813,23 @@ const Reminders: React.FC<ReminderProps> = ({
                             })}
                           </View>
                         </View>
+                      </View>}
+                      {index === 2 &&
+                      index === notificationIntervalChecked &&
+                      <View style={[styles.flex]}>
+                        <TextInput
+                          autoFocus
+                          style={{
+                            fontSize:Spacing * 2.4,
+                            color:Theme.white,
+                            padding:Spacing * 1.1,
+                          }}
+                          maxLength={1}
+                          value={reminders.notification.interval.numberOfDayBefore.toString()}
+                          onChangeText={numberOfDay => handleChangeNumberDayBeforeReminder(numberOfDay)}
+                          keyboardType="numeric"
+                        />
+                        <Text style={{color:Theme.textContrast}}>jours avant</Text>
                       </View>}
                   </View>
                 );

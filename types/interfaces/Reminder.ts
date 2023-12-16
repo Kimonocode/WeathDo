@@ -3,6 +3,7 @@ export interface Interval {
     someDays:boolean,
     everyDays:boolean,
     beforeDay:boolean,
+    numberOfDayBefore:string,
 }
 
 export interface Notification {
