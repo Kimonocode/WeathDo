@@ -14,7 +14,9 @@ import {
   StyleSheet,
   TouchableOpacity,
   Platform,
-  Image
+  Image,
+  ScrollView,
+  ToastAndroid
 } from "react-native";
 import { RadioButton } from "react-native-paper";
 import DateTimePicker, {
@@ -28,18 +30,18 @@ import {
   AntDesign
 } from "@expo/vector-icons";
 import { BlurView } from "expo-blur";
-import { differenceInDays, eachDayOfInterval, format, fromUnixTime, getHours, getUnixTime, parseISO } from "date-fns";
+import { differenceInDays, format, fromUnixTime, getHours } from "date-fns";
 import fr from "date-fns/locale/fr";
-import Spacing from "../../../config/Spacing";
-import Theme from "../../../config/Theme";
+import Spacing from "../../../config/app/Spacing";
+import Theme from "../../../config/app/Theme";
 import { Task } from "../../../types/interfaces/Task";
 import { capitalize, truncate } from "../../../functions/strings";
 import { Reminder } from "../../../types/interfaces/Reminder";
+import { Ionicons } from "@expo/vector-icons";
 
 type ScreenProps = NativeStackScreenProps<RootStackParamList, "CreateTask">;
 
 const CreateTaskScreen: React.FC<ScreenProps> = ({ navigation, route }) => {
-
   const givenDate = route.params.dateSelected;
 
   const [dateTitle, setDateTitle] = useState(route.params.dateTitle);
@@ -390,7 +392,7 @@ const DatePicker: React.FC<DatePickerProps> = ({
         ...task,
         date: selectedDate!
       });
-      onSetDateTitle(format(selectedDate!,'PPP', {locale:fr}));
+      onSetDateTitle(format(selectedDate!, "PPP", { locale: fr }));
     }
     if (event.type === "dismissed") return;
   };
@@ -428,7 +430,6 @@ const Reminders: React.FC<ReminderProps> = ({
   ];
 
   const [errorForMaxDays, setErrorForMaxDays] = useState<boolean>(false);
-  const [ numberOfDayBeforeText, setNumberOfDayBeforeText ] = useState();
 
   const [
     notificationIntervalChecked,
@@ -444,7 +445,7 @@ const Reminders: React.FC<ReminderProps> = ({
     minute: "00",
     days: [],
     notification: {
-      type: null,
+      type: "silencieux",
       interval: {
         everyDays: true,
         someDays: false,
@@ -457,107 +458,64 @@ const Reminders: React.FC<ReminderProps> = ({
   const [firstStep, setFirstStep] = useState<boolean>(true);
   const [secondStep, setSecondStep] = useState<boolean>(false);
 
-  /**
-   * Close reminders list modal and show modal for add one
-   */
-  const openAddReminder = () => {
+
+  const handleOpenAddReminder = () => {
     setFirstStep(false);
     setSecondStep(true);
   };
 
-  /**
-   * Close modal for add reminder and show reminders list
-   */
-  const closeAddReminder = () => {
+  const handleCloseAddReminder = () => {
     setSecondStep(false);
     setFirstStep(true);
   };
 
-  /**
-   * Add or Remove day in days reminder list
-   * @param day 
-   */
   const handleAddDayToReminderDaysList = (day: string) => {
-    if (reminder.days.includes(day)) {
-      let newDays = [...reminder.days];
-      newDays = newDays.filter(row => row !== day);
-      setReminder({ ...reminder, days: newDays });
+    if (reminder.days.length >= 6) {
+      setNotificationIntervalChecked(0);
+      setEveryDaysForReminderNotification();
     } else {
-      setReminder({
-        ...reminder,
-        days: [...reminder.days, day]
-      });
+      if (reminder.days.includes(day)) {
+        let newDays = [...reminder.days];
+        newDays = newDays.filter(row => row !== day);
+        setReminder({ ...reminder, days: newDays });
+      } else {
+        setReminder({
+          ...reminder,
+          days: [...reminder.days, day]
+        });
+      }
     }
   };
 
   const handleHourInputTextChange = (textInput: string) => {
     const hour = +textInput;
-    if(hour < 23){
+    if (hour < 23) {
       setReminder({ ...reminder, hour: textInput });
     } else {
-      setReminder({ ...reminder, hour:'23'});
+      setReminder({ ...reminder, hour: "23" });
     }
   };
 
-  const handleMinutesInputTextChange = (textInput:string) => {
+  const handleMinutesInputTextChange = (textInput: string) => {
     const minutes = +textInput;
-    if(minutes < 59){
+    if (minutes < 59) {
       setReminder({ ...reminder, minute: textInput });
     } else {
-      setReminder({ ...reminder, minute: '59' });
+      setReminder({ ...reminder, minute: "59" });
     }
   };
 
-  /**
-   * Checkbox Notification Interval Controller
-   * @param index
-   */
-  const handleIntervalChecked = (index: number) => {
+  const handleChangeIntervalChecked = (index: number) => {
     setNotificationIntervalChecked(index);
     switch (index) {
       case 0:
-        setReminder({
-          ...reminder,
-          days: [],
-          notification: {
-            ...reminder.notification,
-            interval: {
-              numberOfDayBefore: "2",
-              everyDays: true,
-              someDays: false,
-              beforeDay: false
-            }
-          }
-        });
+        setEveryDaysForReminderNotification();
         break;
       case 1:
-        setReminder({
-          ...reminder,
-          notification: {
-            ...reminder.notification,
-            interval: {
-              numberOfDayBefore: "2",
-              everyDays: false,
-              someDays: true,
-              beforeDay: false
-            }
-          }
-        });
+        setSomeDaysForReminderNotification();
         break;
       case 2:
-        setReminder({
-          ...reminder,
-          days: [],
-          notification: {
-            ...reminder.notification,
-            interval: {
-              ...reminder.notification.interval,
-              everyDays: false,
-              someDays: false,
-              beforeDay: true
-            }
-          }
-        });
+        setBeforeDaysForReminderNotification();
         break;
     }
   };
@@ -573,15 +531,10 @@ const Reminders: React.FC<ReminderProps> = ({
     setNotificationTypeSelected(index);
   };
 
-  /**
-   * Change le nombre de jours pour lequel le rappel doit se lancer avant la date
-   * @param numberOfDay 
-   */
   const handleNumberDayBeforeReminderChange = (numberOfDay: string) => {
-    
-    const maxDays = differenceInDays(task.date, new Date);
+    const maxDays = differenceInDays(task.date, new Date());
 
-    if(+numberOfDay > maxDays){
+    if (+numberOfDay > maxDays) {
       setErrorForMaxDays(true);
     } else {
       setErrorForMaxDays(false);
@@ -598,11 +551,30 @@ const Reminders: React.FC<ReminderProps> = ({
     }
   };
 
-  const getIconForNotificationType = (type: string, color:string|null) => {
-    let icon:ReactNode;
-    color = color !== null ? color : Theme.darkConstart;
+  const handleAddReminderInRemindersList = () => {
+    if(reminderExistInRemindersListByHourAndMinute(reminder.hour, reminder.minute)){
+      showToast("Existe déjà pour " + reminder.hour+":"+reminder.minute);
+    } else {
+      if(reminder.notification.interval.someDays && reminder.days.length < 1){
+        showToast("Saisissez au moins un jour");
+      } else {
+        onSetTask({ ...task, reminders: [...task.reminders, reminder] });
+        handleCloseAddReminder();
+      }
+    }
+  };
+
+  const handleRemoveReminderFromRemindersList = (index: number) => {
+    let reminders = [...task.reminders];
+    reminders.splice(index, 1);
+    onSetTask({ ...task, reminders });
+  };
+
+  const getIconForNotificationType = (type: string | null, color?: string) => {
+    let icon: ReactNode;
+    color = color !== undefined ? color : Theme.text;
     switch (type) {
-      case "silencieuse":
+      case "silencieux":
         icon = <Feather name="bell-off" size={24} color={color} />;
         break;
       case "notification":
@@ -614,6 +586,75 @@ const Reminders: React.FC<ReminderProps> = ({
     return icon;
   };
 
+  const reminderExistInRemindersListByHourAndMinute = (
+    hour: string,
+    minutes: string
+  ): boolean => {
+    const reminders = task.reminders;
+    let result = false;
+
+    for (let i = 0; i < reminders.length; i++) {
+      if (reminders[i].hour === hour && reminders[i].minute === minutes) {
+        result = true;
+      }
+    }
+    return result;
+  };
+
+  const setEveryDaysForReminderNotification = () => {
+    setReminder({
+      ...reminder,
+      days: [],
+      notification: {
+        ...reminder.notification,
+        interval: {
+          numberOfDayBefore: "2",
+          everyDays: true,
+          someDays: false,
+          beforeDay: false
+        }
+      }
+    });
+  };
+
+  const setSomeDaysForReminderNotification = () => {
+    setReminder({
+      ...reminder,
+      notification: {
+        ...reminder.notification,
+        interval: {
+          numberOfDayBefore: "2",
+          everyDays: false,
+          someDays: true,
+          beforeDay: false
+        }
+      }
+    });
+  };
+
+  const setBeforeDaysForReminderNotification = () => {
+    setReminder({
+      ...reminder,
+      days: [],
+      notification: {
+        ...reminder.notification,
+        interval: {
+          ...reminder.notification.interval,
+          everyDays: false,
+          someDays: false,
+          beforeDay: true
+        }
+      }
+    });
+  };
+
+  const showToast = (message: string) => {
+    ToastAndroid.show(
+      message,
+      ToastAndroid.SHORT
+    );  
+  };
+
   return (
     <BlurView intensity={10} tint="dark" style={styles.blurView}>
       {firstStep &&
@@ -621,28 +662,119 @@ const Reminders: React.FC<ReminderProps> = ({
           <View style={styles.modalHeader}>
             <Text style={styles.modalHeaderText}>Heure et Rappels</Text>
           </View>
-          <View
-            style={{
-              padding: Spacing * 1.6,
-              alignItems: "center"
-            }}
-          >
-            <Image
-              source={require("../../../assets/add-bell.png")}
-              style={{
-                width: 65,
-                height: 65
-              }}
-            />
-          </View>
-          <View style={styles.modalBoxInfo}>
-            <Text style={styles.modalInfo}>
-              Vous n'avez aucun rappel pour cette activité.
-            </Text>
-          </View>
+          {task.reminders.length === 0 &&
+            <View style={{ padding: Spacing * 1.6, alignItems: "center" }}>
+              <Image
+                source={require("../../../assets/add-bell.png")}
+                style={{ width: 65, height: 65 }}
+              />
+            </View>}
+          {task.reminders.length === 0
+            ? <View style={styles.modalBoxInfo}>
+                <Text style={styles.modalInfo}>
+                  Vous n'avez aucun rappel pour cette activité.
+                </Text>
+              </View>
+            : <ScrollView
+                showsVerticalScrollIndicator={false}
+                style={{
+                  height: 200
+                }}
+              >
+                {task.reminders.map((reminder, index) => {
+                  return (
+                    <View
+                      key={index}
+                      style={[
+                        styles.flex,
+                        {
+                          justifyContent: "space-between",
+                          padding: Spacing,
+                          borderBottomWidth: 1,
+                          borderBottomColor: Theme.darkSecondary
+                        }
+                      ]}
+                    >
+                      <TouchableOpacity style={styles.reminderBadge}>
+                        {getIconForNotificationType(reminder.notification.type)}
+                      </TouchableOpacity>
+                      <View>
+                        <Text
+                          style={{
+                            color: Theme.text,
+                            textAlign: "center"
+                          }}
+                        >
+                          {reminder.hour}:{reminder.minute}
+                        </Text>
+                        {reminder.days.length !== 0 &&
+                          <ScrollView
+                            horizontal
+                            showsHorizontalScrollIndicator={false}
+                            style={{
+                              maxWidth: 200,
+                              padding: Spacing / 2
+                            }}
+                          >
+                            {reminder.days.map((day, index) =>
+                              <Text
+                                key={index}
+                                style={{
+                                  color: Theme.text,
+                                  fontSize: Spacing * 1.2
+                                }}
+                              >
+                                {capitalize(truncate(day, 3))}{" "}
+                                {index === reminder.days.length - 1
+                                  ? ""
+                                  : " - "}{" "}
+                              </Text>
+                            )}
+                          </ScrollView>}
+                        {reminder.notification.interval.beforeDay &&
+                          <View>
+                            <Text
+                              style={{
+                                color: Theme.text,
+                                fontSize: Spacing * 1.2
+                              }}
+                            >
+                              {
+                                reminder.notification.interval.numberOfDayBefore
+                              }{" "}
+                              jours avant
+                            </Text>
+                          </View>}
+                        {reminder.notification.interval.everyDays &&
+                          <View>
+                            <Text
+                              style={{
+                                color: Theme.text,
+                                fontSize: Spacing * 1.2
+                              }}
+                            >
+                              Tous les jours
+                            </Text>
+                          </View>}
+                      </View>
+                      <TouchableOpacity
+                        onPress={() =>
+                          handleRemoveReminderFromRemindersList(index)}
+                        style={styles.reminderBadge}
+                      >
+                        <Ionicons
+                          name="trash-outline"
+                          size={24}
+                          color={Theme.text}
+                        />
+                      </TouchableOpacity>
+                    </View>
+                  );
+                })}
+              </ScrollView>}
           <View>
             <TouchableOpacity
-              onPress={() => openAddReminder()}
+              onPress={() => handleOpenAddReminder()}
               style={[styles.button, { width: "100%" }]}
             >
               <Text style={[styles.btnText, { color: Theme.primary }]}>
@@ -683,8 +815,7 @@ const Reminders: React.FC<ReminderProps> = ({
             <View>
               <TextInput
                 maxLength={2}
-                onChangeText={text =>
-                  handleHourInputTextChange(text)}
+                onChangeText={text => handleHourInputTextChange(text)}
                 value={reminder.hour}
                 keyboardType="numeric"
                 style={[styles.modalNumericInputs, { borderRadius: 8 }]}
@@ -699,11 +830,7 @@ const Reminders: React.FC<ReminderProps> = ({
                 Heure
               </Text>
             </View>
-            <View
-              style={{
-                padding: Spacing
-              }}
-            >
+            <View style={{ padding: Spacing }}>
               <Text
                 style={{
                   color: Theme.textContrast,
@@ -748,10 +875,7 @@ const Reminders: React.FC<ReminderProps> = ({
             <View
               style={[
                 styles.flex,
-                {
-                  justifyContent: "center",
-                  marginVertical: Spacing
-                }
+                { justifyContent: "center", marginVertical: Spacing }
               ]}
             >
               {notificationType.map((type, index) => {
@@ -779,12 +903,7 @@ const Reminders: React.FC<ReminderProps> = ({
                     }}
                   >
                     {getIconForNotificationType(type, color)}
-                    <Text
-                      style={{
-                        fontSize: Spacing * 1.2,
-                        color: color
-                      }}
-                    >
+                    <Text style={{ fontSize: Spacing * 1.2, color: color }}>
                       {capitalize(type)}
                     </Text>
                   </TouchableOpacity>
@@ -815,7 +934,7 @@ const Reminders: React.FC<ReminderProps> = ({
                             ? "checked"
                             : "unchecked"
                         }
-                        onPress={() => handleIntervalChecked(index)}
+                        onPress={() => handleChangeIntervalChecked(index)}
                       />
                       <Text
                         style={{
@@ -846,9 +965,7 @@ const Reminders: React.FC<ReminderProps> = ({
                                   onPress={() =>
                                     handleAddDayToReminderDaysList(day)}
                                   style={{
-                                    backgroundColor: reminder.days.includes(
-                                      day
-                                    )
+                                    backgroundColor: reminder.days.includes(day)
                                       ? Theme.alphaPrimary
                                       : Theme.darkSecondary,
                                     padding: 6,
@@ -864,7 +981,7 @@ const Reminders: React.FC<ReminderProps> = ({
                                         : Theme.text
                                     }}
                                   >
-                                    {truncate(day,3).toUpperCase()}
+                                    {truncate(day, 3).toUpperCase()}
                                   </Text>
                                 </TouchableOpacity>
                               );
@@ -876,30 +993,28 @@ const Reminders: React.FC<ReminderProps> = ({
                       index === notificationIntervalChecked &&
                       <View>
                         <View style={[styles.flex]}>
-                        <TextInput
-                          autoFocus
-                          style={{
-                            fontSize: Spacing * 2.4,
-                            color: Theme.white,
-                            padding: Spacing * 1.1
-                          }}
-                          maxLength={2}
-                          value={reminder.notification.interval.numberOfDayBefore.toString()}
-                          onChangeText={numberOfDay =>
-                            handleNumberDayBeforeReminderChange(numberOfDay)}
-                          keyboardType="numeric"
-                        />
-                        <Text style={{ color: Theme.textContrast }}>
-                          jours avant
-                        </Text>
+                          <TextInput
+                            autoFocus
+                            style={{
+                              fontSize: Spacing * 2.4,
+                              color: Theme.white,
+                              padding: Spacing * 1.1
+                            }}
+                            maxLength={2}
+                            value={reminder.notification.interval.numberOfDayBefore.toString()}
+                            onChangeText={numberOfDay =>
+                              handleNumberDayBeforeReminderChange(numberOfDay)}
+                            keyboardType="numeric"
+                          />
+                          <Text style={{ color: Theme.textContrast }}>
+                            jours avant
+                          </Text>
                         </View>
-                        {
-                          errorForMaxDays &&
-                          <Text style={{
-                            fontSize:11,
-                            color:Theme.red
-                          }}>Le nombre de jours est supérieur au nombre de jours restant avant la date mentionnée.</Text>
-                        }
+                        {errorForMaxDays &&
+                          <Text style={{ fontSize: 11, color: Theme.red }}>
+                            Est supérieur au nombre de jours restant avant la
+                            date mentionnée.
+                          </Text>}
                       </View>}
                   </View>
                 );
@@ -908,23 +1023,14 @@ const Reminders: React.FC<ReminderProps> = ({
           </View>
           <View style={[styles.flex]}>
             <TouchableOpacity
-              onPress={() => closeAddReminder()}
-              style={[
-                styles.button,
-                {
-                  borderBottomLeftRadius: 16
-                }
-              ]}
+              onPress={() => handleCloseAddReminder()}
+              style={[styles.button, { borderBottomLeftRadius: 16 }]}
             >
               <Text style={styles.btnText}>fermer</Text>
             </TouchableOpacity>
             <TouchableOpacity
-              style={[
-                styles.button,
-                {
-                  borderBottomRightRadius: 16
-                }
-              ]}
+              onPress={() => handleAddReminderInRemindersList()}
+              style={[styles.button, { borderBottomRightRadius: 16 }]}
             >
               <Text style={[styles.btnText, { color: Theme.primary }]}>
                 confirmer
@@ -963,7 +1069,9 @@ const styles = StyleSheet.create({
   button: {
     backgroundColor: Theme.darkSecondary,
     padding: 14,
-    width: "50%"
+    width: "50%",
+    borderBottomWidth: 1,
+    borderBottomColor: Theme.darkConstart
   },
   btnText: {
     fontSize: Spacing * 1.6,
@@ -1023,6 +1131,14 @@ const styles = StyleSheet.create({
     textAlign: "center",
     borderWidth: 1,
     borderColor: Theme.darkConstart
+  },
+  reminderBadge: {
+    width: 40,
+    height: 40,
+    borderRadius: 40,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: Theme.bgDark
   }
 });
 

@@ -1,7 +1,7 @@
 import { StyleProp, StyleSheet, TextStyle } from "react-native"
 import { TextInput } from "react-native"
-import Spacing from "../../../config/Spacing";
-import Theme from "../../../config/Theme";
+import Spacing from "../../../config/app/Spacing";
+import Theme from "../../../config/app/Theme";
 
 type Props = {
   onChangeText: (text: string) => void,

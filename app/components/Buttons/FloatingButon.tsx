@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { TouchableOpacity } from 'react-native';
-import Theme from '../../../config/Theme';
+import Theme from '../../../config/app/Theme';
 
 type Props = {
     onPress?: () => void;

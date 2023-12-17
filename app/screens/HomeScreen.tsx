@@ -3,8 +3,8 @@ import { SafeAreaView, View, Text, TouchableOpacity, ScrollView, StyleSheet } fr
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { eachDayOfInterval, startOfMonth, endOfMonth, format, isSameDay, formatISO, fromUnixTime, getUnixTime } from "date-fns";
 import { RootStackParamList, DaysPickerProps } from "../../types";
-import Spacing from "../../config/Spacing";
-import Theme from "../../config/Theme";
+import Spacing from "../../config/app/Spacing";
+import Theme from "../../config/app/Theme";
 import fr from "date-fns/locale/fr";
 import { capitalize } from "../../functions/strings";
 import FloatingButton from "../components/Buttons/FloatingButon";
