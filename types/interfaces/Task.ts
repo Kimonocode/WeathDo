@@ -5,7 +5,7 @@ export interface Task {
     category:string;
     priority:number;
     description:string | null;
-    date: Date | string
+    date: number | Date
     completed:boolean;
     reminders:Reminder[];
     list:string[];

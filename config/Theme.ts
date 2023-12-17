@@ -8,7 +8,8 @@ const Theme = {
     secondary:'#6B82DF',
     darkConstart:'#212329',
     darkSecondary:'#262A34',
-    alphaPrimary:'#1F253C'
+    alphaPrimary:'#1F253C',
+    red:'#F85149'
 }
 
 export default Theme;

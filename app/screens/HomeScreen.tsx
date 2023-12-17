@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { SafeAreaView, View, Text, TouchableOpacity, ScrollView, StyleSheet } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
-import { eachDayOfInterval, startOfMonth, endOfMonth, format, isSameDay, formatISO } from "date-fns";
+import { eachDayOfInterval, startOfMonth, endOfMonth, format, isSameDay, formatISO, fromUnixTime, getUnixTime } from "date-fns";
 import { RootStackParamList, DaysPickerProps } from "../../types";
 import Spacing from "../../config/Spacing";
 import Theme from "../../config/Theme";
@@ -14,6 +14,7 @@ type ScreenProps = NativeStackScreenProps<RootStackParamList, 'Home'>;
 const HomeScreen:React.FC<ScreenProps> = ({navigation}) => {
 
     const [date, setDate] = useState<Date>(new Date);
+    const [dateSelected, setDateSelected] = useState<number>(getUnixTime(new Date));
     const [title, setTitle] = useState<string>("Aujourd'hui");
 
     useEffect(() => {
@@ -34,15 +35,15 @@ const HomeScreen:React.FC<ScreenProps> = ({navigation}) => {
                     <Text style={{fontSize:Spacing * 2.4, color: Theme.white}}>{title}</Text>
                 </View>
             </View>
-            <DaysPicker date={date} onDayPressed={setTitle}/>
+            <DaysPicker date={date} onSetTitle={setTitle} onSetDateSelected={setDateSelected}/>
             <FloatingButton onPress={() => {
-                navigation.navigate('CreateTask', {date: title})
+                navigation.navigate('CreateTask', {dateTitle: title, dateSelected:dateSelected})
             }}/>
         </SafeAreaView>
     );
 }
 
-const DaysPicker:React.FC<DaysPickerProps> = ({date, onDayPressed}) => {
+const DaysPicker:React.FC<DaysPickerProps> = ({date, onSetTitle, onSetDateSelected}) => {
 
     const [activeID, setActiveID] = useState<number|null>(null);
     const [activeCurrentDay, setActiveCurrentDay] = useState<boolean>(true);
@@ -52,17 +53,23 @@ const DaysPicker:React.FC<DaysPickerProps> = ({date, onDayPressed}) => {
         end: endOfMonth(date)
     });
 
+    const handleDayPressed = (day:Date, index:number) => {
+        setActiveID(index);
+        setActiveCurrentDay(false);
+        isSameDay(date, day) 
+            ? onSetTitle("Aujourd'hui") 
+            : onSetTitle(format(day, 'PPP', {locale:fr}));
+        onSetDateSelected(getUnixTime(day));
+    }
+
     return (
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{
             marginVertical:20
         }}>
             {
                 days.map((day, index) => (
-                    <TouchableOpacity key={index} onPress={(e) => {
-                        setActiveID(index);
-                        setActiveCurrentDay(false);
-                        isSameDay(date, day) ?onDayPressed("Aujourd'hui") :onDayPressed(format(day, 'PPP', {locale:fr}));
-                    }} style={{
+                    <TouchableOpacity key={index} onPress={() => handleDayPressed(day, index)} 
+                    style={{
                         backgroundColor:index === activeID || isSameDay(date, day) && activeCurrentDay ? Theme.primary  : Theme.darkSecondary,
                         width:60,
                         height:60,

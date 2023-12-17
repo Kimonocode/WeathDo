@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { ReactNode, useState } from "react";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import {
   DatePickerProps,
@@ -28,21 +28,26 @@ import {
   AntDesign
 } from "@expo/vector-icons";
 import { BlurView } from "expo-blur";
-import { format, getHours } from "date-fns";
+import { differenceInDays, eachDayOfInterval, format, fromUnixTime, getHours, getUnixTime, parseISO } from "date-fns";
 import fr from "date-fns/locale/fr";
 import Spacing from "../../../config/Spacing";
 import Theme from "../../../config/Theme";
 import { Task } from "../../../types/interfaces/Task";
-import { capitalize } from "../../../functions/strings";
+import { capitalize, truncate } from "../../../functions/strings";
 import { Reminder } from "../../../types/interfaces/Reminder";
 
 type ScreenProps = NativeStackScreenProps<RootStackParamList, "CreateTask">;
 
 const CreateTaskScreen: React.FC<ScreenProps> = ({ navigation, route }) => {
+
+  const givenDate = route.params.dateSelected;
+
+  const [dateTitle, setDateTitle] = useState(route.params.dateTitle);
+
   const [task, setTask] = useState<Task>({
     title: "Nom de la tâche",
     description: "",
-    date: route.params.date,
+    date: fromUnixTime(givenDate),
     category: "tâche",
     priority: 1,
     completed: false,
@@ -123,7 +128,7 @@ const CreateTaskScreen: React.FC<ScreenProps> = ({ navigation, route }) => {
             <Text style={styles.itemText}>Date</Text>
           </View>
           <Text style={styles.tips}>
-            {task.date.toString()}
+            {dateTitle}
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
@@ -226,6 +231,7 @@ const CreateTaskScreen: React.FC<ScreenProps> = ({ navigation, route }) => {
         <DatePicker
           task={task}
           onSetTask={setTask}
+          onSetDateTitle={setDateTitle}
           onSetShowCalendar={setCalendarIsOpen}
         />}
       {remindersIsOpen &&
@@ -374,19 +380,20 @@ const Priorities: React.FC<PriorityProps> = ({
 const DatePicker: React.FC<DatePickerProps> = ({
   task,
   onSetTask,
-  onSetShowCalendar
+  onSetShowCalendar,
+  onSetDateTitle
 }) => {
   const onChange = (event: DateTimePickerEvent, selectedDate?: Date) => {
     if (Platform.OS === "android") {
       onSetShowCalendar(false);
       onSetTask({
         ...task,
-        date: format(selectedDate!, "PPP", { locale: fr })
+        date: selectedDate!
       });
+      onSetDateTitle(format(selectedDate!,'PPP', {locale:fr}));
     }
     if (event.type === "dismissed") return;
   };
-
   return (
     <DateTimePicker
       themeVariant="dark"
@@ -420,14 +427,19 @@ const Reminders: React.FC<ReminderProps> = ({
     "dimanche"
   ];
 
+  const [errorForMaxDays, setErrorForMaxDays] = useState<boolean>(false);
+  const [ numberOfDayBeforeText, setNumberOfDayBeforeText ] = useState();
+
   const [
     notificationIntervalChecked,
     setNotificationIntervalChecked
   ] = useState<number>(0);
 
-  const [notificationTypeSelected, setNotificationTypeSelected] = useState<number>(0);
+  const [notificationTypeSelected, setNotificationTypeSelected] = useState<
+    number
+  >(0);
 
-  const [reminders, setReminders] = useState<Reminder>({
+  const [reminder, setReminder] = useState<Reminder>({
     hour: getHours(new Date()).toString(),
     minute: "00",
     days: [],
@@ -437,7 +449,7 @@ const Reminders: React.FC<ReminderProps> = ({
         everyDays: true,
         someDays: false,
         beforeDay: false,
-        numberOfDayBefore:'2'
+        numberOfDayBefore: "2"
       }
     }
   });
@@ -446,45 +458,71 @@ const Reminders: React.FC<ReminderProps> = ({
   const [secondStep, setSecondStep] = useState<boolean>(false);
 
   /**
-   * Remove first modal reminder and show the second step
+   * Close reminders list modal and show modal for add one
    */
-  const handleAddReminder = () => {
+  const openAddReminder = () => {
     setFirstStep(false);
     setSecondStep(true);
-  }
+  };
+
+  /**
+   * Close modal for add reminder and show reminders list
+   */
+  const closeAddReminder = () => {
+    setSecondStep(false);
+    setFirstStep(true);
+  };
 
   /**
    * Add or Remove day in days reminder list
    * @param day 
    */
   const handleAddDayToReminderDaysList = (day: string) => {
-    if(reminders.days.includes(day)){
-        let newDays = [...reminders.days];
-        newDays = newDays.filter(row => row !== day);
-        setReminders({...reminders, days:newDays});
+    if (reminder.days.includes(day)) {
+      let newDays = [...reminder.days];
+      newDays = newDays.filter(row => row !== day);
+      setReminder({ ...reminder, days: newDays });
     } else {
-        setReminders({...reminders, days: [
-            ...reminders.days, 
-            day
-        ]});
+      setReminder({
+        ...reminder,
+        days: [...reminder.days, day]
+      });
     }
-  }
+  };
+
+  const handleHourInputTextChange = (textInput: string) => {
+    const hour = +textInput;
+    if(hour < 23){
+      setReminder({ ...reminder, hour: textInput });
+    } else {
+      setReminder({ ...reminder, hour:'23'});
+    }
+  };
+
+  const handleMinutesInputTextChange = (textInput:string) => {
+    const minutes = +textInput;
+    if(minutes < 59){
+      setReminder({ ...reminder, minute: textInput });
+    } else {
+      setReminder({ ...reminder, minute: '59' });
+    }
+  };
 
   /**
-   * Checkbox Controller
+   * Checkbox Notification Interval Controller
    * @param index
    */
-  const hanldeIntervalChecked = (index:number) => {
+  const handleIntervalChecked = (index: number) => {
     setNotificationIntervalChecked(index);
     switch (index) {
       case 0:
-        setReminders({
-          ...reminders,
-          days:[],
+        setReminder({
+          ...reminder,
+          days: [],
           notification: {
-            ...reminders.notification,
+            ...reminder.notification,
             interval: {
-              numberOfDayBefore:'2',
+              numberOfDayBefore: "2",
               everyDays: true,
               someDays: false,
               beforeDay: false
@@ -493,12 +531,12 @@ const Reminders: React.FC<ReminderProps> = ({
         });
         break;
       case 1:
-        setReminders({
-          ...reminders,
+        setReminder({
+          ...reminder,
           notification: {
-            ...reminders.notification,
+            ...reminder.notification,
             interval: {
-              numberOfDayBefore:'2',
+              numberOfDayBefore: "2",
               everyDays: false,
               someDays: true,
               beforeDay: false
@@ -507,13 +545,13 @@ const Reminders: React.FC<ReminderProps> = ({
         });
         break;
       case 2:
-        setReminders({
-          ...reminders,
-          days:[],
+        setReminder({
+          ...reminder,
+          days: [],
           notification: {
-            ...reminders.notification,
+            ...reminder.notification,
             interval: {
-              ...reminders.notification.interval,
+              ...reminder.notification.interval,
               everyDays: false,
               someDays: false,
               beforeDay: true
@@ -522,34 +560,59 @@ const Reminders: React.FC<ReminderProps> = ({
         });
         break;
     }
-  }
+  };
 
-  const handleChangeNotificationType = (index:number, type:string) => {
-    setReminders({
-        ...reminders,
-        notification: {
-          ...reminders.notification,
-          type
-        }
-      });
-      setNotificationTypeSelected(index);
-  }
+  const handleChangeNotificationType = (index: number, type: string) => {
+    setReminder({
+      ...reminder,
+      notification: {
+        ...reminder.notification,
+        type
+      }
+    });
+    setNotificationTypeSelected(index);
+  };
 
   /**
    * Change le nombre de jours pour lequel le rappel doit se lancer avant la date
    * @param numberOfDay 
    */
-  const handleChangeNumberDayBeforeReminder = (numberOfDay:string) => {
-    setReminders({
-      ...reminders, notification: {
-        ...reminders.notification,
-          interval:{
-            ...reminders.notification.interval,
-            numberOfDayBefore:numberOfDay
+  const handleNumberDayBeforeReminderChange = (numberOfDay: string) => {
+    
+    const maxDays = differenceInDays(task.date, new Date);
+
+    if(+numberOfDay > maxDays){
+      setErrorForMaxDays(true);
+    } else {
+      setErrorForMaxDays(false);
+      setReminder({
+        ...reminder,
+        notification: {
+          ...reminder.notification,
+          interval: {
+            ...reminder.notification.interval,
+            numberOfDayBefore: numberOfDay
           }
         }
-    })
-  }
+      });
+    }
+  };
+
+  const getIconForNotificationType = (type: string, color:string|null) => {
+    let icon:ReactNode;
+    color = color !== null ? color : Theme.darkConstart;
+    switch (type) {
+      case "silencieuse":
+        icon = <Feather name="bell-off" size={24} color={color} />;
+        break;
+      case "notification":
+        icon = <Feather name="bell" size={24} color={color} />;
+        break;
+      default:
+        icon = <Feather name="clock" size={24} color={color} />;
+    }
+    return icon;
+  };
 
   return (
     <BlurView intensity={10} tint="dark" style={styles.blurView}>
@@ -579,7 +642,7 @@ const Reminders: React.FC<ReminderProps> = ({
           </View>
           <View>
             <TouchableOpacity
-              onPress={() => handleAddReminder()}
+              onPress={() => openAddReminder()}
               style={[styles.button, { width: "100%" }]}
             >
               <Text style={[styles.btnText, { color: Theme.primary }]}>
@@ -621,8 +684,8 @@ const Reminders: React.FC<ReminderProps> = ({
               <TextInput
                 maxLength={2}
                 onChangeText={text =>
-                  setReminders({ ...reminders, hour: text })}
-                value={reminders.hour}
+                  handleHourInputTextChange(text)}
+                value={reminder.hour}
                 keyboardType="numeric"
                 style={[styles.modalNumericInputs, { borderRadius: 8 }]}
               />
@@ -655,9 +718,9 @@ const Reminders: React.FC<ReminderProps> = ({
               <TextInput
                 maxLength={2}
                 onChangeText={text => {
-                  setReminders({ ...reminders, minute: text });
+                  handleMinutesInputTextChange(text);
                 }}
-                value={reminders.minute}
+                value={reminder.minute}
                 keyboardType="numeric"
                 style={[styles.modalNumericInputs, { borderRadius: 8 }]}
               />
@@ -692,7 +755,6 @@ const Reminders: React.FC<ReminderProps> = ({
               ]}
             >
               {notificationType.map((type, index) => {
-                let icon;
                 const background =
                   notificationTypeSelected === index
                     ? Theme.alphaPrimary
@@ -701,17 +763,6 @@ const Reminders: React.FC<ReminderProps> = ({
                   notificationTypeSelected === index
                     ? Theme.primary
                     : Theme.textContrast;
-
-                switch (type) {
-                  case "silencieuse":
-                    icon = <Feather name="bell-off" size={24} color={color} />;
-                    break;
-                  case "notification":
-                    icon = <Feather name="bell" size={24} color={color} />;
-                    break;
-                  default:
-                    icon = <Feather name="clock" size={24} color={color} />;
-                }
 
                 return (
                   <TouchableOpacity
@@ -727,7 +778,7 @@ const Reminders: React.FC<ReminderProps> = ({
                       borderColor: Theme.darkConstart
                     }}
                   >
-                    {icon}
+                    {getIconForNotificationType(type, color)}
                     <Text
                       style={{
                         fontSize: Spacing * 1.2,
@@ -764,7 +815,7 @@ const Reminders: React.FC<ReminderProps> = ({
                             ? "checked"
                             : "unchecked"
                         }
-                        onPress={() => hanldeIntervalChecked(index)}
+                        onPress={() => handleIntervalChecked(index)}
                       />
                       <Text
                         style={{
@@ -792,21 +843,28 @@ const Reminders: React.FC<ReminderProps> = ({
                               return (
                                 <TouchableOpacity
                                   key={index}
-                                  onPress={() => handleAddDayToReminderDaysList(day)}
+                                  onPress={() =>
+                                    handleAddDayToReminderDaysList(day)}
                                   style={{
-                                    backgroundColor:reminders.days.includes(day) ? Theme.alphaPrimary : Theme.darkSecondary,
+                                    backgroundColor: reminder.days.includes(
+                                      day
+                                    )
+                                      ? Theme.alphaPrimary
+                                      : Theme.darkSecondary,
                                     padding: 6,
-                                    borderColor:Theme.bgDark,
+                                    borderColor: Theme.bgDark,
                                     borderRadius: 4
                                   }}
                                 >
                                   <Text
                                     style={{
                                       fontSize: 12,
-                                      color:reminders.days.includes(day) ? Theme.primary : Theme.text
+                                      color: reminder.days.includes(day)
+                                        ? Theme.primary
+                                        : Theme.text
                                     }}
                                   >
-                                    {day.slice(0, 3).toUpperCase()}
+                                    {truncate(day,3).toUpperCase()}
                                   </Text>
                                 </TouchableOpacity>
                               );
@@ -814,22 +872,34 @@ const Reminders: React.FC<ReminderProps> = ({
                           </View>
                         </View>
                       </View>}
-                      {index === 2 &&
+                    {index === 2 &&
                       index === notificationIntervalChecked &&
-                      <View style={[styles.flex]}>
+                      <View>
+                        <View style={[styles.flex]}>
                         <TextInput
                           autoFocus
                           style={{
-                            fontSize:Spacing * 2.4,
-                            color:Theme.white,
-                            padding:Spacing * 1.1,
+                            fontSize: Spacing * 2.4,
+                            color: Theme.white,
+                            padding: Spacing * 1.1
                           }}
-                          maxLength={1}
-                          value={reminders.notification.interval.numberOfDayBefore.toString()}
-                          onChangeText={numberOfDay => handleChangeNumberDayBeforeReminder(numberOfDay)}
+                          maxLength={2}
+                          value={reminder.notification.interval.numberOfDayBefore.toString()}
+                          onChangeText={numberOfDay =>
+                            handleNumberDayBeforeReminderChange(numberOfDay)}
                           keyboardType="numeric"
                         />
-                        <Text style={{color:Theme.textContrast}}>jours avant</Text>
+                        <Text style={{ color: Theme.textContrast }}>
+                          jours avant
+                        </Text>
+                        </View>
+                        {
+                          errorForMaxDays &&
+                          <Text style={{
+                            fontSize:11,
+                            color:Theme.red
+                          }}>Le nombre de jours est supérieur au nombre de jours restant avant la date mentionnée.</Text>
+                        }
                       </View>}
                   </View>
                 );
@@ -838,10 +908,7 @@ const Reminders: React.FC<ReminderProps> = ({
           </View>
           <View style={[styles.flex]}>
             <TouchableOpacity
-              onPress={() => {
-                setSecondStep(false);
-                setFirstStep(true);
-              }}
+              onPress={() => closeAddReminder()}
               style={[
                 styles.button,
                 {
