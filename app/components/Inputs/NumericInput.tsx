@@ -4,16 +4,30 @@ import Spacing from "../../../config/app/Spacing";
 import Theme from "../../../config/app/Theme";
 
 type Props = {
+  value: string
   onChangeText: (text: string) => void,
   maxLength?: number|undefined,
-  style: StyleProp<TextStyle>
+  style?: StyleProp<TextStyle>
 }
 
-const NumericInput:React.FC<Props> = ({onChangeText, maxLength, style}) => {
+const NumericInput:React.FC<Props> = ({value, onChangeText, maxLength, style}) => {
 
     return <TextInput
-      onChangeText={onChangeText}
-      keyboardType="numeric"
+      value={value}
+      onKeyPress={key => {
+        console.log(key)
+      }}
+      onChangeText={text => {
+        if(text === ','){
+          text = '0';
+        }
+        text = text
+          .replace(',','')
+          .replace('.','')
+          .replace('-','')
+        onChangeText(text); 
+      }}
+      keyboardType="number-pad"
       maxLength={maxLength}
       style={[styles.input, style]}
     >
@@ -32,3 +46,5 @@ const styles = StyleSheet.create({
     borderColor: Theme.darkConstart
   }
 });
+
+export default NumericInput;
