@@ -9,6 +9,7 @@ import {
   StyleSheet,
   TouchableOpacity,
 } from "react-native";
+import { TextInput as MaterialTextInput } from "react-native-paper";
 import {
   Feather,
   MaterialCommunityIcons,
@@ -25,6 +26,8 @@ import { fr } from "date-fns/locale";
 import Priorities from "../../components/Tasks/Priorities/Priorities";
 import Reminders from "../../components/Tasks/Reminders/Reminders";
 import { toast } from "../../../funcs/toast";
+import AcceptOrCancelButtons from "../../components/Buttons/AcceptOrCancelButtons";
+import { BlurView } from "expo-blur";
 
 type ScreenProps = NativeStackScreenProps<RootStackParamList, "CreateTask">;
 
@@ -46,10 +49,12 @@ const CreateTaskScreen: React.FC<ScreenProps> = ({ navigation, route }) => {
   });
 
   const [showCalendar, setShowCalendar] = useState(false);
-  const [priorityIsOpen, setPriorityIsOPen] = useState<boolean>(false);
-  const [remindersIsOpen, setRemindersIsOpen] = useState<boolean>(false);
+  const [priorityIsOpen, setPriorityIsOPen] = useState(false);
+  const [remindersIsOpen, setRemindersIsOpen] = useState(false);
+  const [noteIsOpen, setNoteIsOpen] = useState (false);
 
-  const [titleInputValue, setTitleInputValue] = useState<string>("");
+  const [titleInputValue, setTitleInputValue] = useState("");
+  const [noteInputValue, setNoteInputValue] = useState("");
 
   const handleConfirm = () => {
     if (titleInputValue === "") {
@@ -184,7 +189,9 @@ const CreateTaskScreen: React.FC<ScreenProps> = ({ navigation, route }) => {
             {task.priority}
           </Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.items}>
+        <TouchableOpacity
+          onPress={() => setNoteIsOpen(true)} 
+          style={styles.items}>
           <View style={styles.flex}>
             <Feather
               style={{ marginRight: 6 }}
@@ -206,17 +213,12 @@ const CreateTaskScreen: React.FC<ScreenProps> = ({ navigation, route }) => {
           justifyContent: "space-between"
         }}
       >
-        <TouchableOpacity
-          onPress={() => navigation.goBack()}
-          style={styles.button}
-        >
-          <Text style={styles.btnText}>annuler</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.button} onPress={() => handleConfirm()}>
-          <Text style={[styles.btnText, { color: Theme.primary }]}>
-            confirmer
-          </Text>
-        </TouchableOpacity>
+        <AcceptOrCancelButtons 
+          confirmText="confirmer"
+          cancelText="annuler"
+          onCancel={() => navigation.goBack()}
+          onConfirm={() => handleConfirm()}
+        />
       </View>
       {priorityIsOpen &&
         <Priorities
@@ -243,6 +245,55 @@ const CreateTaskScreen: React.FC<ScreenProps> = ({ navigation, route }) => {
           onSetTask={setTask}
           onSetRemindersIsOpen={setRemindersIsOpen}
         />}
+      {
+        noteIsOpen && 
+        <BlurView style={styles.blurView} tint="dark" intensity={10}>
+          <View style={[styles.modal]}>
+            <View>
+              <TextInput
+                autoFocus
+                placeholder='Ajouter une note'
+                value={noteInputValue}
+                onChangeText={text => setNoteInputValue(text)}
+                placeholderTextColor={Theme.text}
+                style={{
+                  padding:8,
+                  fontSize:Spacing * 1.6,
+                  backgroundColor:Theme.darkConstart,
+                  paddingBottom:150,
+                  borderBottomColor:Theme.primary,
+                  borderTopLeftRadius:16,
+                  borderTopRightRadius:16,
+                  color:Theme.text
+                }}
+              />  
+            </View>
+            <AcceptOrCancelButtons 
+              confirmText="confirmer"
+              cancelText="annuler"
+              onCancel={() => setNoteIsOpen(false)}
+              onConfirm={() => {
+                setTask({...task, description: noteInputValue});
+                setNoteIsOpen(false);
+              }}
+              options={{
+                cancelButton:{
+                  style:{
+                    width:'100%'
+                  }
+                },
+                confirmButton:{
+                  style:{
+                    width:'100%',
+                    borderBottomLeftRadius:16,
+                    borderBottomRightRadius:16
+                  }
+                }
+              }}
+            /> 
+          </View>
+        </BlurView>
+      }
     </SafeAreaView>
   );
 };
@@ -270,19 +321,6 @@ const styles = StyleSheet.create({
   flex: {
     flexDirection: "row",
     alignItems: "center"
-  },
-  button: {
-    backgroundColor: Theme.darkSecondary,
-    padding: 14,
-    width: "50%",
-    borderBottomWidth: 1,
-    borderBottomColor: Theme.darkConstart
-  },
-  btnText: {
-    fontSize: Spacing * 1.6,
-    color: Theme.text,
-    textTransform: "uppercase",
-    textAlign: "center"
   },
   priorityButton: {
     width: 56,

@@ -17,8 +17,8 @@ import { ReminderInterface } from "../../../models/Task/ReminderInterface";
 import { Feather, Ionicons } from "@expo/vector-icons";
 import { toast } from "../../../../funcs/toast";
 import { TaskInterface } from "../../../models/Task/TaskInterface";
-import NumericInput from "../../Inputs/NumericInput"
-
+import NumericInput from "../../Inputs/NumericInput";
+import AcceptOrCancelButtons from "../../Buttons/AcceptOrCancelButtons";
 
 type Props = {
   task: TaskInterface;
@@ -390,30 +390,31 @@ const Reminders: React.FC<Props> = ({
                   );
                 })}
               </ScrollView>}
-          <View>
-            <TouchableOpacity
-              onPress={() => handleOpenAddReminder()}
-              style={[styles.button, { width: "100%" }]}
-            >
-              <Text style={[styles.btnText, { color: Theme.primary }]}>
-                Ajouter un rappel
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() => onSetRemindersIsOpen(false)}
-              style={[
-                styles.button,
-                {
-                  width: "100%",
-                  borderBottomRightRadius: 16,
-                  borderBottomLeftRadius: 16
+          <View
+            style={{
+              flexDirection: "column-reverse"
+            }}
+          >
+            <AcceptOrCancelButtons
+              confirmText="Ajouter un rappel"
+              cancelText={task.reminders.length > 0 ? "confirmer" : "fermer"}
+              onConfirm={() => handleOpenAddReminder()}
+              onCancel={() => onSetRemindersIsOpen(false)}
+              options={{
+                cancelButton: {
+                  style: {
+                    width: "100%",
+                    borderBottomRightRadius: 16,
+                    borderBottomLeftRadius: 16
+                  }
+                },
+                confirmButton: {
+                  style: {
+                    width: "100%"
+                  }
                 }
-              ]}
-            >
-              <Text style={[styles.btnText, {}]}>
-                {task.reminders.length > 0 ? "confirmer" : "fermer"}
-              </Text>
-            </TouchableOpacity>
+              }}
+            />
           </View>
         </View>}
       {secondStep &&
@@ -580,9 +581,8 @@ const Reminders: React.FC<Props> = ({
                                   <TouchableOpacity
                                     key={index}
                                     onPress={() => {
-                                        handleAddDayToReminderDaysList(day);
-                                      }
-                                    }
+                                      handleAddDayToReminderDaysList(day);
+                                    }}
                                     style={{
                                       backgroundColor: reminder.days.includes(
                                         day
@@ -642,20 +642,24 @@ const Reminders: React.FC<Props> = ({
               </View>
             </View>}
           <View style={[styles.flex]}>
-            <TouchableOpacity
-              onPress={() => handleCloseAddReminder()}
-              style={[styles.button, { borderBottomLeftRadius: 16 }]}
-            >
-              <Text style={styles.btnText}>fermer</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() => handleAddReminderInRemindersList()}
-              style={[styles.button, { borderBottomRightRadius: 16 }]}
-            >
-              <Text style={[styles.btnText, { color: Theme.primary }]}>
-                confirmer
-              </Text>
-            </TouchableOpacity>
+            <AcceptOrCancelButtons
+              confirmText="confirmer"
+              cancelText="fermer"
+              onCancel={() => handleCloseAddReminder()}
+              onConfirm={() => handleAddReminderInRemindersList()}
+              options={{
+                cancelButton: {
+                  style: {
+                    borderBottomLeftRadius: 16
+                  }
+                },
+                confirmButton: {
+                  style: {
+                    borderBottomRightRadius: 16
+                  }
+                }
+              }}
+            />
           </View>
         </View>}
     </BlurView>
@@ -685,19 +689,6 @@ const styles = StyleSheet.create({
   flex: {
     flexDirection: "row",
     alignItems: "center"
-  },
-  button: {
-    backgroundColor: Theme.darkSecondary,
-    padding: 14,
-    width: "50%",
-    borderBottomWidth: 1,
-    borderBottomColor: Theme.darkConstart
-  },
-  btnText: {
-    fontSize: Spacing * 1.6,
-    color: Theme.text,
-    textTransform: "uppercase",
-    textAlign: "center"
   },
   priorityButton: {
     width: 56,
