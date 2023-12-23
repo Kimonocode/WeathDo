@@ -1,5 +1,5 @@
 import { describe, test, expect } from "@jest/globals";
-import { getNumbersBetween } from "../../../functions/array";
+import { getNumbersBetween } from "../../../funcs/array";
 
 
 describe('Array Function getNumbersBetween', () => {

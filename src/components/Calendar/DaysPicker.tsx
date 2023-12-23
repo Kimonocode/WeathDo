@@ -5,9 +5,6 @@ import {
   ScrollView,
   TouchableOpacity,
   Text,
-  NativeSyntheticEvent,
-  NativeScrollEvent,
-  ScrollViewProps
 } from "react-native";
 import Theme from "../../../config/Theme";
 import { capitalize } from "../../../funcs/strings";

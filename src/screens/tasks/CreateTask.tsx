@@ -9,7 +9,6 @@ import {
   StyleSheet,
   TouchableOpacity,
 } from "react-native";
-import { TextInput as MaterialTextInput } from "react-native-paper";
 import {
   Feather,
   MaterialCommunityIcons,
@@ -28,6 +27,10 @@ import Reminders from "../../components/Tasks/Reminders/Reminders";
 import { toast } from "../../../funcs/toast";
 import AcceptOrCancelButtons from "../../components/Buttons/AcceptOrCancelButtons";
 import { BlurView } from "expo-blur";
+import TaskCategories from "../../components/Tasks/Categories/Categories";
+import { taskCategories } from "../../storage/data/tasks/categories";
+import IconCategory from "../../components/Tasks/Categories/IconCategory";
+import TaskCategory from "../../models/Task/Category";
 
 type ScreenProps = NativeStackScreenProps<RootStackParamList, "CreateTask">;
 
@@ -48,20 +51,24 @@ const CreateTaskScreen: React.FC<ScreenProps> = ({ navigation, route }) => {
     reminders: []
   });
 
+  const [noteIsOpen, setNoteIsOpen] = useState (false);
   const [showCalendar, setShowCalendar] = useState(false);
   const [priorityIsOpen, setPriorityIsOPen] = useState(false);
   const [remindersIsOpen, setRemindersIsOpen] = useState(false);
-  const [noteIsOpen, setNoteIsOpen] = useState (false);
-
+  const [categoriesIsOpen, setCategoriesIsOpen] = useState(false);
+  
   const [titleInputValue, setTitleInputValue] = useState("");
   const [noteInputValue, setNoteInputValue] = useState("");
 
   const handleConfirm = () => {
     if (titleInputValue === "") {
-      toast("Saisir un nom", 3000);
+      toast("Saisir un nom");
       return;
     }
   };
+
+  const category = TaskCategory.findByTitle(task.category);
+  const iconCategoryColor = category === null ? Theme.primary : category.color;
 
   return (
     <SafeAreaView
@@ -102,7 +109,9 @@ const CreateTaskScreen: React.FC<ScreenProps> = ({ navigation, route }) => {
         </View>
       </View>
       <View>
-        <TouchableOpacity style={styles.items}>
+        <TouchableOpacity style={styles.items}
+          onPress={() => setCategoriesIsOpen(true)}
+        >
           <View style={styles.flex}>
             <MaterialIcons
               style={{ marginRight: 6 }}
@@ -112,9 +121,16 @@ const CreateTaskScreen: React.FC<ScreenProps> = ({ navigation, route }) => {
             />
             <Text style={styles.itemText}>Catégorie</Text>
           </View>
-          <Text style={{ color: Theme.primary }}>
-            {capitalize(task.category)}
-          </Text>
+          <View style={{
+            flexDirection:'row',
+            alignItems:'center'
+          }}>
+            <IconCategory category={task.category} color={iconCategoryColor!}            
+            />
+            <Text style={{ color: iconCategoryColor!, marginLeft:Spacing }}>
+              {capitalize(task.category)}
+            </Text>
+          </View>
         </TouchableOpacity>
         <TouchableOpacity
           onPress={() => setShowCalendar(true)}
@@ -238,7 +254,14 @@ const CreateTaskScreen: React.FC<ScreenProps> = ({ navigation, route }) => {
           setShowCalendar(false);
         }}
       />
-
+      {
+        categoriesIsOpen && < TaskCategories
+          task={task}
+          onSetTask={setTask}
+          categories={taskCategories}
+          onSetCategory={setCategoriesIsOpen}
+        />
+      }
       {remindersIsOpen &&
         <Reminders
           task={task}

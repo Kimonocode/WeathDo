@@ -2,24 +2,31 @@ import { CategoryInterface } from "./CategoryInterface";
 import { taskCategories } from "../../storage/data/tasks/categories";
 
 export default class TaskCategory {
-
+  /**
+   * Get all categories available
+   * @returns CategoryInterface[]
+   */
   public static getCategories():CategoryInterface[] {
     return taskCategories;
   }
 
-  public static findById(v: number): CategoryInterface|null {
-    const category = taskCategories.filter(row => row.id === v);
-    if(category[0]){
-      return category[0];
-    }
-    return null;
+  /**
+   * Find one category by id
+   * @param id number
+   * @returns CategoryInterface|null
+   */
+  public static findById(id: number): CategoryInterface|null {
+    const [category] = taskCategories.filter(row => row.id === id);
+    return category ? category : null;
   }
 
-  public static findBy(v: string): CategoryInterface|null {
-    const category = taskCategories.filter(row => row.title === v);
-    if(category[0]){
-      return category[0];
-    }
-    return null;
+  /**
+   * Find one catgeory by title
+   * @param title string
+   * @returns CategoryInterface|null
+   */
+  public static findByTitle(title: string): CategoryInterface|null {
+    const [category] = taskCategories.filter(row => row.title === title);
+    return category ? category : null;
   }
 }

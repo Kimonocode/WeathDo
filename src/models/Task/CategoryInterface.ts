@@ -1,4 +1,4 @@
-export interface CategoryInterface {
+export type CategoryInterface = {
   id: number,
   title: string,
   icon?: string | null,

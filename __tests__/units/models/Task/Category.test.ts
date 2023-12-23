@@ -1,21 +1,21 @@
 import { describe, expect, test } from "@jest/globals";
-import TaskCategory from "../../../../app/models/Task/Category";
+import TaskCategory from "../../../../src/models/Task/Category";
 import Theme from "../../../../config/Theme";
-import { taskCategories } from "../../../../app/storage/data/tasks/categories";
+import { taskCategories } from "../../../../src/storage/data/tasks/categories";
 
 describe('Task Category Model', () => {
 
   test('it should be the good Category finded by category title: santé', () => {
-    const category = TaskCategory.findBy('santé');
+    const category = TaskCategory.findByTitle('santé');
     expect(category).toStrictEqual({
       id: 3,
       title: 'santé',
-      color: null
+      color:Theme.green
     })
   });
 
   test('it should be the good Category finded by category title: tâche', () => {
-    const category = TaskCategory.findBy('tâche');
+    const category = TaskCategory.findByTitle('tâche');
     expect(category).toStrictEqual({
       id: 1,
       title: 'tâche',
@@ -33,12 +33,12 @@ describe('Task Category Model', () => {
   });
 
   test("it should be null if category isn't finded by id", () => {
-    const category = TaskCategory.findById(7899);
+    const category = TaskCategory.findById(70899);
     expect(category).toBeNull();
   });
 
   test("it should be null if category isn't finded by title", () => {
-    const category = TaskCategory.findBy('qsqdhqdsdkhshdf');
+    const category = TaskCategory.findByTitle('qsqdhqdsdkhshdf');
     expect(category).toBeNull();
   });
 

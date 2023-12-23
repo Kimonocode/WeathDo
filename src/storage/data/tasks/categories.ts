@@ -10,21 +10,21 @@ export const taskCategories: CategoryInterface[] = [
   {
     id:2,
     title:'travail',
-    color:'#fff'
+    color:Theme.yellow
   },
   {
     id:3,
     title:'santé',
-    color:null
+    color:Theme.green
   },
   {
     id:4,
     title:'études',
-    color:null,
+    color:Theme.blue,
   },
   {
     id:5,
     title:'méditation',
-    color:null
+    color:Theme.purple
   }
 ];
