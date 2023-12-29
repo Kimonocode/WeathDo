@@ -1,7 +1,7 @@
 import { TouchableOpacity, Text, View, StyleSheet } from "react-native"
 import IconCategory from "./IconCategory"
 import Theme from "../../../../config/Theme"
-import { truncate } from "../../../../funcs/strings"
+import { capitalize, truncate } from "../../../../funcs/strings"
 import Spacing from "../../../../config/Spacing"
 import { TaskInterface } from "../../../models/Task/TaskInterface"
 import { Dispatch, SetStateAction } from "react"
@@ -24,7 +24,7 @@ const TaskCategoryItem:React.FC<Props> = ({title, color, onSetCategory, task, on
     }}
     >
     <IconCategory category={title} color={color}/>
-    <Text style={styles.title}>{title.length > 7 ? truncate(title, 7) + '..' : title}</Text>
+    <Text style={styles.title}>{capitalize(title.length > 7 ? truncate(title, 7) + '..' : title)}</Text>
   </TouchableOpacity>
 }
 
@@ -37,10 +37,12 @@ const styles = StyleSheet.create({
     justifyContent:"center",
     borderRadius:8,
     marginBottom:Spacing,
+    elevation:10
   },
   title:{
     color:Theme.text,
     fontSize:Spacing * 1.2,
+    marginTop:4
   }
 });
 

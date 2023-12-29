@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1003747354671",
+    "project_id": "skygenda-dfd6c",
+    "storage_bucket": "skygenda-dfd6c.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1003747354671:android:54978ff3ece76866dd3eda",
+        "android_client_info": {
+          "package_name": "com.beta.skygenda"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB_3AFwfaOM8Eg-YqnNcOqsA4skhjRyoCg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

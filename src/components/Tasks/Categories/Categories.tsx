@@ -21,6 +21,7 @@ const TaskCategories:React.FC<Props> = ({task, onSetTask, categories, onSetCateg
       {
         categories.map(category => {
           return <TaskCategoryItem
+            key={category.id}
             task={task}
             onSetTask={onSetTask}
             title={category.title} 
@@ -44,11 +45,7 @@ const styles = StyleSheet.create({
     justifyContent: "center"
   },
   modal: {
-    padding:Spacing,
     width: '90%',
-    backgroundColor: Theme.darkConstart,
-    borderRadius: 16,
-    elevation: 10,
     flexDirection:'row',
     justifyContent: "space-between",
     flexWrap:"wrap",

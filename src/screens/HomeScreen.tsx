@@ -27,7 +27,7 @@ const HomeScreen: React.FC<ScreenProps> = ({ navigation }) => {
 
   const todayWord = "Aujourd'hui";
   const [title, setTitle] = useState<string>(todayWord);
-
+  
   return (
     <SafeAreaView
       style={{

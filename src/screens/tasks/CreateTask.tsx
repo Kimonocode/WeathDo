@@ -31,6 +31,7 @@ import TaskCategories from "../../components/Tasks/Categories/Categories";
 import { taskCategories } from "../../storage/data/tasks/categories";
 import IconCategory from "../../components/Tasks/Categories/IconCategory";
 import TaskCategory from "../../models/Task/Category";
+import firestore from '@react-native-firebase/firestore';
 
 type ScreenProps = NativeStackScreenProps<RootStackParamList, "CreateTask">;
 
@@ -60,11 +61,15 @@ const CreateTaskScreen: React.FC<ScreenProps> = ({ navigation, route }) => {
   const [titleInputValue, setTitleInputValue] = useState("");
   const [noteInputValue, setNoteInputValue] = useState("");
 
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
     if (titleInputValue === "") {
       toast("Saisir un nom");
       return;
     }
+    const taskDoc = await firestore()
+      .collection('tasks')
+      .add(task);
+    console.log(taskDoc);
   };
 
   const category = TaskCategory.findByTitle(task.category);
