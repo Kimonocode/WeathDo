@@ -66,10 +66,7 @@ const CreateTaskScreen: React.FC<ScreenProps> = ({ navigation, route }) => {
       toast("Saisir un nom");
       return;
     }
-    const taskDoc = await firestore()
-      .collection('tasks')
-      .add(task);
-    console.log(taskDoc);
+    console.log('tâches ajoutées');
   };
 
   const category = TaskCategory.findByTitle(task.category);
