@@ -5,13 +5,15 @@ import {
   eachDayOfInterval,
   startOfMonth,
   endOfMonth,
-  getUnixTime
+  getUnixTime,
 } from "date-fns";
 import { RootStackParamList } from "../../types";
 import Spacing from "../../config/Spacing";
 import Theme from "../../config/Theme";
 import FloatingButton from "../components/Buttons/FloatingButon";
 import DaysPicker from "../components/Calendar/DaysPicker";
+import { TaskInterface } from "../models/Task/TaskInterface";
+import Task from "../models/Task/Task";
 
 type ScreenProps = NativeStackScreenProps<RootStackParamList, "Home">;
 
@@ -27,7 +29,25 @@ const HomeScreen: React.FC<ScreenProps> = ({ navigation }) => {
 
   const todayWord = "Aujourd'hui";
   const [title, setTitle] = useState<string>(todayWord);
-  
+
+  const [tasks, setTasks] = useState<TaskInterface[] | any[]>([]);
+
+  const getTasksFromStore = async () => {
+    const store = await Task.all(dateSelected);
+    if (store !== null) {
+      setTasks(store);
+    }
+  };
+
+  useEffect(
+    () => {
+      getTasksFromStore();
+    },
+    [dateSelected]
+  );
+
+  console.log(tasks);
+
   return (
     <SafeAreaView
       style={{
@@ -49,6 +69,45 @@ const HomeScreen: React.FC<ScreenProps> = ({ navigation }) => {
         onSetTitle={setTitle}
         onSetDateSelected={setDateSelected}
       />
+      {tasks.length === 0
+        ? <View
+            style={{
+              flex: 1,
+              alignItems: "center",
+              justifyContent: "center"
+            }}
+          >
+            <Text
+              style={{
+                color: Theme.text,
+                fontSize: Spacing * 1.8,
+                marginBottom: Spacing
+              }}
+            >
+              Aucune tâche
+            </Text>
+            <Text
+              style={{
+                color: Theme.text,
+                fontSize: Spacing * 1.4
+              }}
+            >
+              Commencez par ajouter une tâche
+            </Text>
+          </View>
+        : tasks.map(task => {
+            return (
+              <View key={task.id}>
+                <Text
+                  style={{
+                    color: Theme.white
+                  }}
+                >
+                  {task.title}
+                </Text>
+              </View>
+            );
+          })}
       <FloatingButton
         onPress={() => {
           navigation.navigate("CreateTask", {

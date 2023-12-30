@@ -15,7 +15,7 @@ import {
   Entypo,
   MaterialIcons
 } from "@expo/vector-icons";
-import { format, fromUnixTime } from "date-fns";
+import { format, fromUnixTime, getUnixTime } from "date-fns";
 import Spacing from "../../../config/Spacing";
 import Theme from "../../../config/Theme";
 import { TaskInterface } from "../../models/Task/TaskInterface";
@@ -31,7 +31,8 @@ import TaskCategories from "../../components/Tasks/Categories/Categories";
 import { taskCategories } from "../../storage/data/tasks/categories";
 import IconCategory from "../../components/Tasks/Categories/IconCategory";
 import TaskCategory from "../../models/Task/Category";
-import firestore from '@react-native-firebase/firestore';
+import Task from "../../models/Task/Task";
+import { ActivityIndicator } from "react-native-paper";
 
 type ScreenProps = NativeStackScreenProps<RootStackParamList, "CreateTask">;
 
@@ -41,10 +42,9 @@ const CreateTaskScreen: React.FC<ScreenProps> = ({ navigation, route }) => {
   const [dateTitle, setDateTitle] = useState(route.params.dateTitle);
 
   const [task, setTask] = useState<TaskInterface>({
-    _id: 0,
     title: "Nom de la tâche",
     description: "",
-    date: fromUnixTime(givenDate),
+    date: givenDate,
     category: "tâche",
     priority: 1,
     completed: false,
@@ -52,6 +52,7 @@ const CreateTaskScreen: React.FC<ScreenProps> = ({ navigation, route }) => {
     reminders: []
   });
 
+  const [loader, setLoader] = useState(false);
   const [noteIsOpen, setNoteIsOpen] = useState (false);
   const [showCalendar, setShowCalendar] = useState(false);
   const [priorityIsOpen, setPriorityIsOPen] = useState(false);
@@ -61,16 +62,24 @@ const CreateTaskScreen: React.FC<ScreenProps> = ({ navigation, route }) => {
   const [titleInputValue, setTitleInputValue] = useState("");
   const [noteInputValue, setNoteInputValue] = useState("");
 
-  const handleConfirm = async () => {
-    if (titleInputValue === "") {
-      toast("Saisir un nom");
-      return;
-    }
-    console.log('tâches ajoutées');
-  };
-
   const category = TaskCategory.findByTitle(task.category);
   const iconCategoryColor = category === null ? Theme.primary : category.color;
+
+  const handleConfirm = async () => {
+    if (titleInputValue === "") {
+      toast("Saisir un nom ❌");
+      return;
+    }
+    setLoader(true);
+    const isPersited = await Task.store(task);
+    if(isPersited){
+      toast('Tâche ajoutée 🎉');
+      setLoader(false);
+    } else {
+      toast("Oupss... Une erreur s'est produite.");
+      setLoader(false);
+    }
+  };
 
   return (
     <SafeAreaView
@@ -79,6 +88,7 @@ const CreateTaskScreen: React.FC<ScreenProps> = ({ navigation, route }) => {
         backgroundColor: Theme.bgDark
       }}
     >
+      {loader && <ActivityIndicator color={Theme.primary}/>}
       <View
         style={{
           padding: Spacing * 1.2
@@ -249,7 +259,7 @@ const CreateTaskScreen: React.FC<ScreenProps> = ({ navigation, route }) => {
         mode="date"
         onConfirm={date => {
           setDateTitle(format(date, "PPP", { locale: fr }));
-          setTask({ ...task, date: date });
+          setTask({ ...task, date: getUnixTime(date) });
           setShowCalendar(false);
         }}
         onCancel={() => {
