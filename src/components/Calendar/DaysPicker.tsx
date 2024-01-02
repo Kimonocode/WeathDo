@@ -1,11 +1,7 @@
 import { format, getUnixTime, isSameDay } from "date-fns";
 import { fr } from "date-fns/locale";
 import { useEffect, useRef, useState } from "react";
-import {
-  ScrollView,
-  TouchableOpacity,
-  Text,
-} from "react-native";
+import { ScrollView, TouchableOpacity, Text } from "react-native";
 import Theme from "../../../config/Theme";
 import { capitalize } from "../../../funcs/strings";
 import Spacing from "../../../config/Spacing";
@@ -37,7 +33,7 @@ const DaysPicker: React.FC<Props> = ({
     onSetDateSelected(getUnixTime(day));
   };
 
-  useEffect(() => {
+  const scrollToAndSetCurrentDay = () => {
     days.map((day, index) => {
       if (isSameDay(day, new Date())) {
         scrollRef.current!.scrollTo({
@@ -45,9 +41,14 @@ const DaysPicker: React.FC<Props> = ({
           animated: true
         });
         setActiveCurrentDay(true);
+        onSetDateSelected(getUnixTime(day));
       }
     });
-  },[]);
+  };
+
+  useEffect(() => {
+    scrollToAndSetCurrentDay();
+  }, []);
 
   return (
     <ScrollView
@@ -56,7 +57,7 @@ const DaysPicker: React.FC<Props> = ({
       showsHorizontalScrollIndicator={false}
       style={{
         marginVertical: 20,
-        maxHeight:60
+        maxHeight: 60
       }}
     >
       {days.map((day, index) => {

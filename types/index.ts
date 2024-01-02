@@ -1,7 +1,9 @@
 import { Dispatch, SetStateAction } from "react";
 
 export type RootStackParamList = {
-    Home: undefined
+    Home:{
+        date?:number
+    }
     CreateTask:{
         dateTitle:string
         dateSelected:number

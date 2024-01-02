@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from "react";
-import { SafeAreaView, View, Text } from "react-native";
+import { SafeAreaView, View, Text, Image, TouchableOpacity } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import {
   eachDayOfInterval,
   startOfMonth,
   endOfMonth,
-  getUnixTime,
+  getUnixTime
 } from "date-fns";
 import { RootStackParamList } from "../../types";
 import Spacing from "../../config/Spacing";
@@ -14,14 +14,20 @@ import FloatingButton from "../components/Buttons/FloatingButon";
 import DaysPicker from "../components/Calendar/DaysPicker";
 import { TaskInterface } from "../models/Task/TaskInterface";
 import Task from "../models/Task/Task";
+import { toast } from "../../funcs/toast";
 
 type ScreenProps = NativeStackScreenProps<RootStackParamList, "Home">;
 
-const HomeScreen: React.FC<ScreenProps> = ({ navigation }) => {
+const HomeScreen: React.FC<ScreenProps> = ({ navigation, route }) => {
+
   const [date, setDate] = useState<Date>(new Date());
+  const taskRegistered = route.params.date;
+
   const [dateSelected, setDateSelected] = useState<number>(
     getUnixTime(new Date())
   );
+
+  
   const days = eachDayOfInterval({
     start: startOfMonth(date),
     end: endOfMonth(date)
@@ -33,20 +39,16 @@ const HomeScreen: React.FC<ScreenProps> = ({ navigation }) => {
   const [tasks, setTasks] = useState<TaskInterface[] | any[]>([]);
 
   const getTasksFromStore = async () => {
-    const store = await Task.all(dateSelected);
-    if (store !== null) {
-      setTasks(store);
-    }
+    const tasks = await Task.all(dateSelected);
+    !!tasks && setTasks([...tasks]);
   };
 
   useEffect(
     () => {
       getTasksFromStore();
     },
-    [dateSelected]
+    [dateSelected, taskRegistered]
   );
-
-  console.log(tasks);
 
   return (
     <SafeAreaView
@@ -77,6 +79,13 @@ const HomeScreen: React.FC<ScreenProps> = ({ navigation }) => {
               justifyContent: "center"
             }}
           >
+            <Image
+              source={require("../../assets/search.png")}
+              style={{
+                width: 100,
+                height: 100
+              }}
+            />
             <Text
               style={{
                 color: Theme.text,
@@ -84,7 +93,7 @@ const HomeScreen: React.FC<ScreenProps> = ({ navigation }) => {
                 marginBottom: Spacing
               }}
             >
-              Aucune tâche
+              C'est un peu vide ici...
             </Text>
             <Text
               style={{
@@ -98,12 +107,26 @@ const HomeScreen: React.FC<ScreenProps> = ({ navigation }) => {
         : tasks.map(task => {
             return (
               <View key={task.id}>
+                <TouchableOpacity onPress={async () => {
+                  await Task.destroy(task.id);
+                  toast('Tâche supprimée');
+                  navigation.navigate('Home',{date:task.date});
+                }}>
+                  <Text style={{color:Theme.red}}>Supprimer</Text>
+                </TouchableOpacity>
                 <Text
                   style={{
                     color: Theme.white
                   }}
                 >
                   {task.title}
+                </Text>
+                <Text
+                  style={{
+                    color: Theme.white
+                  }}
+                >
+                  p: {task.priority}
                 </Text>
               </View>
             );

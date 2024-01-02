@@ -24,6 +24,9 @@ const Navigation = () => {
           options={{
             title: ""
           }}
+          initialParams={{
+            date:undefined
+          }}
         />
         <Stack.Screen
           name="CreateTask"
