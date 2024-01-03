@@ -1,5 +1,10 @@
 import React from 'react'
-import { Falsy, StyleProp, StyleSheet, StyleSheetProperties, Text, TouchableOpacity, TouchableOpacityProps, ViewStyle } from 'react-native';
+import { 
+  StyleSheet,  
+  Text, 
+  TouchableOpacity, 
+  ViewStyle 
+} from 'react-native';
 import Theme from '../../../config/Theme';
 import Spacing from '../../../config/Spacing';
 
@@ -9,7 +14,6 @@ type Props = {
   onConfirm:() => void,
   onCancel:() => void,
   options?:{
-
     cancelButton?:{
       style?:ViewStyle
     },
@@ -19,8 +23,13 @@ type Props = {
   }
 }
 
-const AcceptOrCancelButtons:React.FC<Props> = ({cancelText, confirmText, onConfirm, onCancel, options}) => {
-
+const AcceptOrCancelButtons:React.FC<Props> = ({
+  cancelText, 
+  confirmText, 
+  onConfirm, 
+  onCancel, 
+  options
+}) => {
   return (
     <>
       <TouchableOpacity

@@ -19,6 +19,9 @@ import { toast } from "../../../../funcs/toast";
 import { TaskInterface } from "../../../models/Task/TaskInterface";
 import NumericInput from "../../Inputs/NumericInput";
 import AcceptOrCancelButtons from "../../Buttons/AcceptOrCancelButtons";
+import { days, notificationInterval } from "../../../storage/data/calendar";
+import NotificationIcon from "./Notifications/NotificationIcon";
+import { formatDaysInline } from "../../../../funcs/dates";
 
 type Props = {
   task: TaskInterface;
@@ -32,23 +35,6 @@ const Reminders: React.FC<Props> = ({
   onSetRemindersIsOpen
 }) => {
   const notificationType = ["silencieux", "notification", "alarme"];
-
-  const notificationInterval = [
-    "Tous les jours",
-    "Certains jours de la semaine",
-    "Jours avant"
-  ];
-
-  const days = [
-    "lundi",
-    "mardi",
-    "mercredi",
-    "jeudi",
-    "vendredi",
-    "samedi",
-    "dimanche"
-  ];
-
   const [errorForMaxDays, setErrorForMaxDays] = useState<boolean>(false);
 
   const [
@@ -194,22 +180,6 @@ const Reminders: React.FC<Props> = ({
     onSetTask({ ...task, reminders });
   };
 
-  const getIconForNotificationType = (type: string | null, color?: string) => {
-    let icon: ReactNode;
-    color = color !== undefined ? color : Theme.text;
-    switch (type) {
-      case "silencieux":
-        icon = <Feather name="bell-off" size={24} color={color} />;
-        break;
-      case "notification":
-        icon = <Feather name="bell" size={24} color={color} />;
-        break;
-      default:
-        icon = <Feather name="clock" size={24} color={color} />;
-    }
-    return icon;
-  };
-
   const reminderExistInRemindersListByHourAndMinute = (
     hour: string,
     minutes: string
@@ -314,7 +284,10 @@ const Reminders: React.FC<Props> = ({
                       ]}
                     >
                       <TouchableOpacity style={styles.reminderBadge}>
-                        {getIconForNotificationType(reminder.notification.type)}
+                        <NotificationIcon 
+                          type={reminder.notification.type}
+                          size={24}
+                        />
                       </TouchableOpacity>
                       <View>
                         <Text
@@ -342,10 +315,7 @@ const Reminders: React.FC<Props> = ({
                                   fontSize: Spacing * 1.2
                                 }}
                               >
-                                {capitalize(truncate(day, 3))}{" "}
-                                {index === reminder.days.length - 1
-                                  ? ""
-                                  : "◦"}{" "}
+                                {formatDaysInline(day, index, reminder.days)}
                               </Text>
                             )}
                           </ScrollView>}
@@ -519,7 +489,11 @@ const Reminders: React.FC<Props> = ({
                       borderColor: Theme.darkConstart
                     }}
                   >
-                    {getIconForNotificationType(type, color)}
+                    <NotificationIcon 
+                      type={type}
+                      color={color}
+                      size={24}
+                    />
                     <Text style={{ fontSize: Spacing * 1.2, color: color }}>
                       {capitalize(type)}
                     </Text>

@@ -1,5 +1,10 @@
 import React, { useEffect, useState } from "react";
-import { SafeAreaView, View, Text, Image, TouchableOpacity } from "react-native";
+import {
+  SafeAreaView,
+  View,
+  Text,
+  Image,
+} from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import {
   eachDayOfInterval,
@@ -14,12 +19,19 @@ import FloatingButton from "../components/Buttons/FloatingButon";
 import DaysPicker from "../components/Calendar/DaysPicker";
 import { TaskInterface } from "../models/Task/TaskInterface";
 import Task from "../models/Task/Task";
+import TaskList from "../components/Tasks/TasksList";
+import {
+  PanGestureHandler,
+  GestureDetector,
+  Gesture,
+  GestureHandlerRootView
+} from "react-native-gesture-handler";
+import storage from "../storage/stotage";
 import { toast } from "../../funcs/toast";
 
 type ScreenProps = NativeStackScreenProps<RootStackParamList, "Home">;
 
 const HomeScreen: React.FC<ScreenProps> = ({ navigation, route }) => {
-
   const [date, setDate] = useState<Date>(new Date());
   const taskRegistered = route.params.date;
 
@@ -27,7 +39,6 @@ const HomeScreen: React.FC<ScreenProps> = ({ navigation, route }) => {
     getUnixTime(new Date())
   );
 
-  
   const days = eachDayOfInterval({
     start: startOfMonth(date),
     end: endOfMonth(date)
@@ -54,12 +65,11 @@ const HomeScreen: React.FC<ScreenProps> = ({ navigation, route }) => {
     <SafeAreaView
       style={{
         flex: 1,
-        padding: Spacing * 1.2,
         backgroundColor: Theme.bgDark
       }}
     >
       <View>
-        <View>
+        <View style={{padding:Spacing}}>
           <Text style={{ fontSize: Spacing * 2.4, color: Theme.white }}>
             {title}
           </Text>
@@ -101,41 +111,28 @@ const HomeScreen: React.FC<ScreenProps> = ({ navigation, route }) => {
                 fontSize: Spacing * 1.4
               }}
             >
-              Commencez par ajouter une tâche
+              Commençons par ajouter une tâche
             </Text>
           </View>
-        : tasks.map(task => {
-            return (
-              <View key={task.id}>
-                <TouchableOpacity onPress={async () => {
-                  await Task.destroy(task.id);
-                  toast('Tâche supprimée');
-                  navigation.navigate('Home',{date:task.date});
-                }}>
-                  <Text style={{color:Theme.red}}>Supprimer</Text>
-                </TouchableOpacity>
-                <Text
-                  style={{
-                    color: Theme.white
-                  }}
-                >
-                  {task.title}
-                </Text>
-                <Text
-                  style={{
-                    color: Theme.white
-                  }}
-                >
-                  p: {task.priority}
-                </Text>
-              </View>
-            );
-          })}
+        : <GestureHandlerRootView>
+          <TaskList 
+            tasks={tasks}
+            onTaskIsDestroyed={id => {
+              toast('Tâche supprimée');
+              navigation.navigate('Home', {
+                date:dateSelected,
+              });
+            }}
+          />
+        </GestureHandlerRootView>
+        
+        }
       <FloatingButton
         onPress={() => {
           navigation.navigate("CreateTask", {
             dateTitle: title,
-            dateSelected: dateSelected
+            dateSelected: dateSelected,
+            date:dateSelected,
           });
         }}
       />

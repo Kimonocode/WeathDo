@@ -20,7 +20,7 @@ type Props = {
 
 const Priorities: React.FC<Props> = ({
   task,
-  onSetTask,
+  onSetTask,  
   onSetPriorityOpen
 }) => {
   let plus: number = task.priority + 1;

@@ -7,5 +7,6 @@ export type RootStackParamList = {
     CreateTask:{
         dateTitle:string
         dateSelected:number
+        date?:number
     }
 }

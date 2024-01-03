@@ -28,13 +28,11 @@ export default class Task {
   static async store(task: TaskInterface): Promise<boolean> {
     try {
       const uuid = uuidv4();
+      task.id = uuid;
       await storage.save({
         key: Task.key,
         id: uuid,
-        data: {
-          id: uuid,
-          ...task
-        }
+        data: task
       });
       return true;
     } catch (error) {

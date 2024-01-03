@@ -140,7 +140,10 @@ const CreateTaskScreen: React.FC<ScreenProps> = ({ navigation, route }) => {
             flexDirection:'row',
             alignItems:'center'
           }}>
-            <IconCategory category={task.category} color={iconCategoryColor!}            
+            <IconCategory 
+              category={task.category} 
+              color={iconCategoryColor!}
+              size={24}            
             />
             <Text style={{ color: iconCategoryColor!, marginLeft:Spacing }}>
               {capitalize(task.category)}

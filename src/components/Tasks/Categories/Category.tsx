@@ -23,7 +23,7 @@ const TaskCategoryItem:React.FC<Props> = ({title, color, onSetCategory, task, on
       onSetCategory(false);
     }}
     >
-    <IconCategory category={title} color={color}/>
+    <IconCategory category={title} color={color} size={24}/>
     <Text style={styles.title}>{capitalize(title.length > 7 ? truncate(title, 7) + '..' : title)}</Text>
   </TouchableOpacity>
 }
