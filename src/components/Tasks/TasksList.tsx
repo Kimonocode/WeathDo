@@ -65,6 +65,7 @@ const TaskList: React.FC<Props> = ({ tasks, onTaskIsDestroyed }) => {
         style={{
           flexDirection: "row",
           alignItems: "center",
+          width:'100%',
           transform: [{ translateX: index === taskSwiped ? translateX : 0 }]
         }}
       >
