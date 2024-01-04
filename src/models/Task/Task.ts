@@ -5,7 +5,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 export default class Task {
 
-  private static key:string = 'task';
+  private static readonly key:string = 'task';
 
   //Get all Tasks filtered by dates
   static async all(date: number): Promise<TaskInterface[] | null> {

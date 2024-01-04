@@ -1,7 +1,4 @@
-import {
-  TouchableOpacity,
-  Animated
-} from "react-native";
+import { TouchableOpacity, Animated } from "react-native";
 import { PanGestureHandler } from "react-native-gesture-handler";
 import { Ionicons } from "@expo/vector-icons";
 import Theme from "../../../config/Theme";
@@ -13,22 +10,24 @@ import Task from "../../models/Task/Task";
 
 type Props = {
   tasks: TaskInterface[];
-  onTaskIsDestroyed: (id:string|number) => void
+  onTaskIsDestroyed: (id: string | number) => void;
 };
 
 const TaskList: React.FC<Props> = ({ tasks, onTaskIsDestroyed }) => {
-  const [heightItem, setHeightItem] = useState(0);
   const [taskSwiped, setTaskSwiped] = useState(0);
   const translateX = new Animated.Value(0);
-  
+  const translateY = new Animated.Value(0);
+
   const onGestureEvent = Animated.event(
-    [{ nativeEvent: { translationX: translateX } }],
+    [
+      { nativeEvent: { translationX: translateX } }
+    ],
     { useNativeDriver: true }
   );
 
-  const onRelease = (
-    event: { nativeEvent: { translationX: number } }
-  ) => {
+  const onRelease = (event: { nativeEvent: {
+    translationX: number 
+} }) => {
     if (event.nativeEvent.translationX < -60) {
       // Swipe action detected, you can trigger any action here
       Animated.timing(translateX, {
@@ -46,27 +45,29 @@ const TaskList: React.FC<Props> = ({ tasks, onTaskIsDestroyed }) => {
     }
   };
 
-  const handleDestroy = async (id:string|number) => {
+  const handleDestroy = async (id: string | number) => {
     await Task.destroy(id.toString());
     onTaskIsDestroyed(id.toString());
-  }
+  };
 
   return tasks.map((task, index) =>
     <PanGestureHandler
       key={index}
       onGestureEvent={onGestureEvent}
-      onHandlerStateChange={(e) => {
+      onHandlerStateChange={e => {
         setTaskSwiped(index);
         onRelease(e);
       }}
     >
       <Animated.View
-        onLayout={e => setHeightItem(e.nativeEvent.layout.height)}
         style={{
           flexDirection: "row",
           alignItems: "center",
-          width:'100%',
-          transform: [{ translateX: index === taskSwiped ? translateX : 0 }]
+          width: "100%",
+          transform: [
+            { translateX: index === taskSwiped ? translateX : 0 },
+            { translateY: 0}
+          ]
         }}
       >
         <TaskItem task={task} />
@@ -74,7 +75,7 @@ const TaskList: React.FC<Props> = ({ tasks, onTaskIsDestroyed }) => {
           onPress={() => handleDestroy(task.id)}
           style={{
             width: 60,
-            height: heightItem,
+            height: 110,
             alignItems: "center",
             justifyContent: "center",
             backgroundColor: Theme.red

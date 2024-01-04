@@ -42,6 +42,7 @@ const CreateTaskScreen: React.FC<ScreenProps> = ({ navigation, route }) => {
   const [dateTitle, setDateTitle] = useState(route.params.dateTitle);
 
   const [task, setTask] = useState<TaskInterface>({
+    id:'',
     title: "Nom de la tâche",
     description: "",
     date: givenDate,
