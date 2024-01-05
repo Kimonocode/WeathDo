@@ -11,7 +11,13 @@ const days = [
 const notificationInterval = [
   "Tous les jours",
   "Certains jours de la semaine",
-  "Jours avant"
+  "Un certain moment"
 ];
 
-export { days, notificationInterval }
+const daysInterval = [
+  "jours",
+  "heures",
+  "minutes"
+];
+
+export { days, notificationInterval, daysInterval }

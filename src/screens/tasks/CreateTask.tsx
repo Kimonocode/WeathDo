@@ -15,7 +15,7 @@ import {
   Entypo,
   MaterialIcons
 } from "@expo/vector-icons";
-import { format, fromUnixTime, getUnixTime } from "date-fns";
+import { format, getUnixTime } from "date-fns";
 import Spacing from "../../../config/Spacing";
 import Theme from "../../../config/Theme";
 import { TaskInterface } from "../../models/Task/TaskInterface";

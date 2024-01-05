@@ -117,7 +117,8 @@ const styles = StyleSheet.create({
     borderBottomColor: Theme.darkConstart,
     borderBottomWidth: 1,
     width: "100%",
-    minHeight: 110
+    minHeight: 130,
+    maxHeight: 130
   },
   hour: {
     color: Theme.white

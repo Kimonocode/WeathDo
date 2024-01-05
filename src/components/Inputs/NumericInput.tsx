@@ -7,13 +7,15 @@ type Props = {
   value: string
   onChangeText: (text: string) => void,
   maxLength?: number|undefined,
+  focusable?:boolean
   style?: StyleProp<TextStyle>
 }
 
-const NumericInput:React.FC<Props> = ({value, onChangeText, maxLength, style}) => {
+const NumericInput:React.FC<Props> = ({value, onChangeText, maxLength, style, focusable}) => {
 
     return <TextInput
       value={value}
+      focusable={focusable}
       onChangeText={text => {
         if(text === ','){
           text = '0';

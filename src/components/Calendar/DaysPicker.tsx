@@ -21,7 +21,6 @@ const DaysPicker: React.FC<Props> = ({
 }) => {
   const [activeID, setActiveID] = useState<number | null>(null);
   const [activeCurrentDay, setActiveCurrentDay] = useState(true);
-
   const scrollRef = useRef<ScrollView | null>(null);
 
   const handleDayPressed = (day: Date, index: number) => {
@@ -56,8 +55,9 @@ const DaysPicker: React.FC<Props> = ({
       horizontal
       showsHorizontalScrollIndicator={false}
       style={{
-        marginVertical: 20,
-        maxHeight: 60
+        marginVertical: Spacing * 2,
+        maxHeight: 60,
+        paddingHorizontal: Spacing,
       }}
     >
       {days.map((day, index) => {

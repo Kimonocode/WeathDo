@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { SafeAreaView, View, Text, TouchableOpacity } from "react-native";
+import { SafeAreaView, View, Text, TouchableOpacity, DimensionValue } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import {
   eachDayOfInterval,
@@ -13,7 +13,6 @@ import Theme from "../../config/Theme";
 import FloatingButton from "../components/Buttons/FloatingButon";
 import DaysPicker from "../components/Calendar/DaysPicker";
 import { TaskInterface } from "../models/Task/TaskInterface";
-import Task from "../models/Task/Task";
 import TaskList from "../components/Tasks/TasksList";
 import {
   GestureHandlerRootView,
@@ -23,19 +22,13 @@ import { toast } from "../../funcs/toast";
 import { taskCategories } from "../storage/data/tasks/categories";
 import NoTask3D from "../components/3D/NoTask3D";
 import { capitalize } from "../../funcs/strings";
+import { getTasksFromStore } from "../../funcs/storage";
+import { MaterialIcons } from '@expo/vector-icons';
 
 type ScreenProps = NativeStackScreenProps<RootStackParamList, "Home">;
 type TaskCategoryScrollBar = {
   dateSelected: number;
   onSetTask: React.Dispatch<React.SetStateAction<TaskInterface[]>>;
-};
-
-const getTasksFromStore = async (
-  date: number,
-  callback: (tasks: TaskInterface[]) => void
-) => {
-  const tasks = await Task.all(date);
-  !!tasks && callback(tasks);
 };
 
 const TaskCategoryScrollBar: React.FC<TaskCategoryScrollBar> = ({
@@ -44,15 +37,39 @@ const TaskCategoryScrollBar: React.FC<TaskCategoryScrollBar> = ({
 }) => {
   const tasksCategoriesItems = ["All", ...taskCategories];
   const [taskCategoryItemSelected, setTaskCategoryItemSelected] = useState(0);
+  const [width, setWidth ] = useState<DimensionValue>('90%')
   return (
     <ScrollView
       horizontal
+      onScroll={e => e.nativeEvent.contentOffset.x === 0 ? setWidth('90%') : setWidth('80%')}
       showsHorizontalScrollIndicator={false}
       style={{
-        marginBottom: Spacing,
-        maxHeight:30
+        marginTop: Spacing,
+        marginBottom: Spacing * 2,
+        width:width
       }}
     >
+      <TouchableOpacity
+        style={{
+          backgroundColor: Theme.darkConstart,
+          marginLeft: Spacing,
+          padding: 4,
+          borderRadius: 4,
+          flexDirection:'row',
+          alignItems:'flex-end'
+        }}
+      >
+        <Text
+          style={{
+            color: Theme.text
+          }}
+        >
+          Tous les filtres
+        </Text>
+        <MaterialIcons name="filter-list" color={Theme.text} size={16} style={{
+          marginLeft:4
+        }}/>
+      </TouchableOpacity>
       {tasksCategoriesItems.map((category, index) =>
         <TouchableOpacity
           key={typeof category === "string" ? index : category.id.toString()}
@@ -74,8 +91,7 @@ const TaskCategoryScrollBar: React.FC<TaskCategoryScrollBar> = ({
                 : Theme.darkConstart,
             marginLeft: Spacing,
             padding: 4,
-            borderRadius: 4,
-            maxHeight: 30
+            borderRadius: 4
           }}
         >
           <Text
@@ -127,58 +143,43 @@ const HomeScreen: React.FC<ScreenProps> = ({ navigation, route }) => {
     >
       <GestureHandlerRootView
         style={{
-         flex:1,
-         alignItems:'center',
-         justifyContent:'center'
+          flex: 1,
+          alignItems: "center",
+          justifyContent: "center"
         }}
       >
-       <ScrollView showsVerticalScrollIndicator={false} style={{
-       }}>
-       <View>
-          <View style={{ padding: Spacing }}>
-            <Text style={{ fontSize: Spacing * 2.4, color: Theme.white }}>
-              {title}
-            </Text>
+        <ScrollView showsVerticalScrollIndicator={false} style={{}}>
+          <View>
+            <View style={{ padding: Spacing }}>
+              <Text style={{ fontSize: Spacing * 2.4, color: Theme.white }}>
+                {title}
+              </Text>
+            </View>
           </View>
-        </View>
-        <DaysPicker
-          date={date}
-          days={days}
-          onSetTitle={setTitle}
-          onSetDateSelected={setDateSelected}
-        />
-        <View
-          style={{
-            padding: Spacing
-          }}
-        >
-          <Text
-            style={{
-              color: Theme.text,
-              fontSize: 18
-            }}
-          >
-            Catégories
-          </Text>
-        </View>
-        <TaskCategoryScrollBar
-          dateSelected={dateSelected}
-          onSetTask={setTasks}
-        />
-        {tasks.length === 0
-          ? <NoTask3D />
-          : <View>
-              <TaskList
-                tasks={tasks}
-                onTaskIsDestroyed={id => {
-                  toast("Tâche supprimée");
-                  navigation.navigate("Home", {
-                    date: getUnixTime(new Date())
-                  });
-                }}
-              />
-            </View>}
-       </ScrollView>
+          <DaysPicker
+            date={date}
+            days={days}
+            onSetTitle={setTitle}
+            onSetDateSelected={setDateSelected}
+          />
+          <TaskCategoryScrollBar
+            dateSelected={dateSelected}
+            onSetTask={setTasks}
+          />
+          {tasks.length === 0
+            ? <NoTask3D />
+            : <View>
+                <TaskList
+                  tasks={tasks}
+                  onTaskIsDestroyed={id => {
+                    toast("Tâche supprimée");
+                    navigation.navigate("Home", {
+                      date: getUnixTime(new Date())
+                    });
+                  }}
+                />
+              </View>}
+        </ScrollView>
       </GestureHandlerRootView>
       <FloatingButton
         onPress={() => {

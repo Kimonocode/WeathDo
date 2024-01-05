@@ -19,9 +19,10 @@ import { toast } from "../../../../funcs/toast";
 import { TaskInterface } from "../../../models/Task/TaskInterface";
 import NumericInput from "../../Inputs/NumericInput";
 import AcceptOrCancelButtons from "../../Buttons/AcceptOrCancelButtons";
-import { days, notificationInterval } from "../../../storage/data/calendar";
+import { days, daysInterval, notificationInterval } from "../../../storage/data/calendar";
 import NotificationIcon from "./Notifications/NotificationIcon";
 import { formatDaysInline } from "../../../../funcs/dates";
+import SelectDropdown from "react-native-select-dropdown";
 
 type Props = {
   task: TaskInterface;
@@ -35,7 +36,6 @@ const Reminders: React.FC<Props> = ({
   onSetRemindersIsOpen
 }) => {
   const notificationType = ["silencieux", "notification", "alarme"];
-  const [errorForMaxDays, setErrorForMaxDays] = useState<boolean>(false);
 
   const [
     notificationIntervalChecked,
@@ -55,8 +55,9 @@ const Reminders: React.FC<Props> = ({
       interval: {
         everyDays: true,
         someDays: false,
-        beforeDay: false,
-        numberOfDayBefore: "2"
+        before: false,
+        beforeInterval: "minutes",
+        beforeNumber: 10
       }
     }
   });
@@ -136,25 +137,31 @@ const Reminders: React.FC<Props> = ({
     setNotificationTypeSelected(index);
   };
 
-  const handleNumberDayBeforeReminderChange = (numberOfDay: string) => {
-    const maxDays = differenceInDays(task.date, new Date());
-
-    if (+numberOfDay > maxDays) {
-      setErrorForMaxDays(true);
-    } else {
-      setErrorForMaxDays(false);
-      setReminder({
-        ...reminder,
-        notification: {
-          ...reminder.notification,
-          interval: {
-            ...reminder.notification.interval,
-            numberOfDayBefore: numberOfDay
-          }
+  const handleChangeNotificationInterval = (interval: string) => {
+    setReminder({
+      ...reminder,
+      notification: {
+        ...reminder.notification,
+        interval:{
+          ...reminder.notification.interval,
+          beforeInterval:interval
         }
-      });
-    }
-  };
+      }
+    });
+  }
+
+  const handleChangeNumberInterval = (number: number) => {
+    setReminder({
+      ...reminder,
+      notification: {
+        ...reminder.notification,
+        interval:{
+          ...reminder.notification.interval,
+          beforeNumber:number
+        }
+      }
+    });
+  }
 
   const handleAddReminderInRemindersList = () => {
     if (
@@ -163,7 +170,7 @@ const Reminders: React.FC<Props> = ({
         reminder.minute
       )
     ) {
-      toast("Existe déjà pour " + reminder.hour + ":" + reminder.minute, 3000);
+      toast("Existe déjà pour " + reminder.hour + ":" + reminder.minute);
     } else {
       if (reminder.notification.interval.someDays && reminder.days.length < 1) {
         toast("Saisissez au moins un jour");
@@ -203,10 +210,11 @@ const Reminders: React.FC<Props> = ({
       notification: {
         ...reminder.notification,
         interval: {
-          numberOfDayBefore: "2",
+          beforeNumber: 10,
           everyDays: true,
           someDays: false,
-          beforeDay: false
+          before: false,
+          beforeInterval: "minutes"
         }
       }
     });
@@ -218,10 +226,11 @@ const Reminders: React.FC<Props> = ({
       notification: {
         ...reminder.notification,
         interval: {
-          numberOfDayBefore: "2",
+          beforeNumber: 10,
           everyDays: false,
           someDays: true,
-          beforeDay: false
+          before: false,
+          beforeInterval: "minutes"
         }
       }
     });
@@ -237,7 +246,7 @@ const Reminders: React.FC<Props> = ({
           ...reminder.notification.interval,
           everyDays: false,
           someDays: false,
-          beforeDay: true
+          before: true
         }
       }
     });
@@ -284,7 +293,7 @@ const Reminders: React.FC<Props> = ({
                       ]}
                     >
                       <TouchableOpacity style={styles.reminderBadge}>
-                        <NotificationIcon 
+                        <NotificationIcon
                           type={reminder.notification.type}
                           size={24}
                         />
@@ -319,7 +328,7 @@ const Reminders: React.FC<Props> = ({
                               </Text>
                             )}
                           </ScrollView>}
-                        {reminder.notification.interval.beforeDay &&
+                        {reminder.notification.interval.before &&
                           <View>
                             <Text
                               style={{
@@ -327,10 +336,11 @@ const Reminders: React.FC<Props> = ({
                                 fontSize: Spacing * 1.2
                               }}
                             >
+                              {reminder.notification.interval.beforeNumber}{" "}
                               {
-                                reminder.notification.interval.numberOfDayBefore
+                                reminder.notification.interval.beforeInterval
                               }{" "}
-                              jours avant
+                              avant
                             </Text>
                           </View>}
                         {reminder.notification.interval.everyDays &&
@@ -489,11 +499,7 @@ const Reminders: React.FC<Props> = ({
                       borderColor: Theme.darkConstart
                     }}
                   >
-                    <NotificationIcon 
-                      type={type}
-                      color={color}
-                      size={24}
-                    />
+                    <NotificationIcon type={type} color={color} size={24} />
                     <Text style={{ fontSize: Spacing * 1.2, color: color }}>
                       {capitalize(type)}
                     </Text>
@@ -589,26 +595,49 @@ const Reminders: React.FC<Props> = ({
                         <View>
                           <View style={[styles.flex]}>
                             <NumericInput
-                              value={reminder.notification.interval.numberOfDayBefore.toString()}
+                              focusable={true}
+                              value={reminder.notification.interval.beforeNumber.toString()}
                               maxLength={2}
-                              onChangeText={numberOfDay =>
-                                handleNumberDayBeforeReminderChange(
-                                  numberOfDay
-                                )}
+                              onChangeText={ text => handleChangeNumberInterval(+text)}
                               style={{
                                 backgroundColor: Theme.darkConstart,
-                                width: 30
+                                width: 30,
+                                borderBottomWidth:1,
+                                borderBottomColor:Theme.darkConstart,
+                              }}
+                            />
+                            <SelectDropdown 
+                              data={daysInterval}
+                              onSelect={(selectedItem, index) => {
+                                handleChangeNotificationInterval(selectedItem)
+                              }}
+                              defaultValue={reminder.notification.interval.beforeInterval}
+                              renderDropdownIcon={(selectedItem, index) => {
+                                return(
+                                  <Feather name="chevron-down" color={Theme.text} />
+                                );
+                              }}
+                              buttonStyle={{
+                                width:100,
+                                backgroundColor:Theme.darkConstart
+                              }}
+                              buttonTextStyle={{
+                                color:Theme.text,
+                                fontSize:14
+                              }}
+                              rowStyle={{
+                                backgroundColor:Theme.darkConstart,
+                                borderBottomColor:Theme.darkSecondary,
+                                borderTopColor:Theme.darkSecondary
+                              }}
+                              rowTextStyle={{
+                                color:Theme.text
                               }}
                             />
                             <Text style={{ color: Theme.textContrast }}>
-                              jours avant
+                              avant
                             </Text>
                           </View>
-                          {errorForMaxDays &&
-                            <Text style={{ fontSize: 11, color: Theme.red }}>
-                              Est supérieur au nombre de jours restant avant la
-                              date mentionnée.
-                            </Text>}
                         </View>}
                     </View>
                   );

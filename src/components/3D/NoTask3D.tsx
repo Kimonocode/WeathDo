@@ -8,14 +8,16 @@ const NoTask3D = () => {
       style={{
         height: 500,
         alignItems: "center",
-        justifyContent: "center"
+        justifyContent: "center",
+        transform:[{translateX:-44}]
       }}
     >
       <Image
         source={require("../../../assets/search.png")}
         style={{
           width: 100,
-          height: 100
+          height: 100,
+         
         }}
       />
       <Text

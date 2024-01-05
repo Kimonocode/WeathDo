@@ -2,8 +2,9 @@
 interface Interval {
     someDays: boolean,
     everyDays: boolean,
-    beforeDay: boolean,
-    numberOfDayBefore: string,
+    before: boolean,
+    beforeInterval:string,
+    beforeNumber: number,
 }
 
 interface Notification {

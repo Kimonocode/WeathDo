@@ -4,7 +4,6 @@ import { Ionicons } from "@expo/vector-icons";
 import Theme from "../../../config/Theme";
 import TaskItem from "./TaskItem";
 import { useState } from "react";
-import { toast } from "../../../funcs/toast";
 import { TaskInterface } from "../../models/Task/TaskInterface";
 import Task from "../../models/Task/Task";
 
@@ -16,30 +15,29 @@ type Props = {
 const TaskList: React.FC<Props> = ({ tasks, onTaskIsDestroyed }) => {
   const [taskSwiped, setTaskSwiped] = useState(0);
   const translateX = new Animated.Value(0);
-  const translateY = new Animated.Value(0);
 
   const onGestureEvent = Animated.event(
-    [
-      { nativeEvent: { translationX: translateX } }
-    ],
+    [{ nativeEvent: { translationX: translateX } }],
     { useNativeDriver: true }
   );
 
-  const onRelease = (event: { nativeEvent: {
-    translationX: number 
-} }) => {
+  const onRelease = (event: {
+    nativeEvent: {
+      translationX: number;
+    };
+  }) => {
     if (event.nativeEvent.translationX < -60) {
       // Swipe action detected, you can trigger any action here
       Animated.timing(translateX, {
-        toValue: -60,
-        duration: 200,
+        toValue: -120,
+        duration: 300,
         useNativeDriver: true
       }).start();
     } else {
       // Reset to initial position
       Animated.timing(translateX, {
         toValue: 0,
-        duration: 200,
+        duration: 300,
         useNativeDriver: true
       }).start();
     }
@@ -66,7 +64,7 @@ const TaskList: React.FC<Props> = ({ tasks, onTaskIsDestroyed }) => {
           width: "100%",
           transform: [
             { translateX: index === taskSwiped ? translateX : 0 },
-            { translateY: 0}
+            { translateY: 0 }
           ]
         }}
       >
@@ -75,7 +73,7 @@ const TaskList: React.FC<Props> = ({ tasks, onTaskIsDestroyed }) => {
           onPress={() => handleDestroy(task.id)}
           style={{
             width: 60,
-            height: 110,
+            height: 130,
             alignItems: "center",
             justifyContent: "center",
             backgroundColor: Theme.red
