@@ -77,7 +77,7 @@ const CreateTaskScreen: React.FC<ScreenProps> = ({ navigation, route }) => {
       toast('Tâche ajoutée 🎉');
       setLoader(false);
       navigation.navigate('Home', {
-        date:getUnixTime(task.date)
+        date:getUnixTime(new Date)
       });
     } else {
       toast("Oupss... Une erreur s'est produite.");

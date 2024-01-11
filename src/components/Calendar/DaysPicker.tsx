@@ -55,9 +55,8 @@ const DaysPicker: React.FC<Props> = ({
       horizontal
       showsHorizontalScrollIndicator={false}
       style={{
-        marginVertical: Spacing * 2,
+        marginVertical: Spacing * 1.6,
         maxHeight: 60,
-        paddingHorizontal: Spacing,
       }}
     >
       {days.map((day, index) => {

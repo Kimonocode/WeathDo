@@ -8,14 +8,14 @@ export default class Task {
   private static readonly key:string = 'task';
 
   //Get all Tasks filtered by dates
-  static async all(date: number): Promise<TaskInterface[] | null> {
+  static async all(date: number, callback: (error: unknown) => void): Promise<TaskInterface[] | null> {
     try {
       const tasks: TaskInterface[] = await storage.getAllDataForKey(Task.key);
       return tasks
         .filter(task => task.date === date)
         .sort(Task.sortByPriorities);
     } catch (error) {
-      console.log(error);
+      callback(error);
       return null;
     }
   }

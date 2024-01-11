@@ -1,89 +1,40 @@
-import { TouchableOpacity, Animated } from "react-native";
-import { PanGestureHandler } from "react-native-gesture-handler";
-import { Ionicons } from "@expo/vector-icons";
-import Theme from "../../../config/Theme";
+import { FlatList } from "react-native";
 import TaskItem from "./TaskItem";
-import { useState } from "react";
 import { TaskInterface } from "../../models/Task/TaskInterface";
-import Task from "../../models/Task/Task";
+import { useState, useCallback } from "react";
+import useFetchTasks from "../../hooks/fetchers/useFetchTasks";
 
 type Props = {
   tasks: TaskInterface[];
-  onTaskIsDestroyed: (id: string | number) => void;
+  dateSelected:number;
+  onTaskIsDestroy: (id: string | number ) => void
 };
 
-const TaskList: React.FC<Props> = ({ tasks, onTaskIsDestroyed }) => {
-  const [taskSwiped, setTaskSwiped] = useState(0);
-  const translateX = new Animated.Value(0);
+const TaskList: React.FC<Props> = ({ tasks, dateSelected, onTaskIsDestroy }) => {
 
-  const onGestureEvent = Animated.event(
-    [{ nativeEvent: { translationX: translateX } }],
-    { useNativeDriver: true }
+  const { getTasks } = useFetchTasks();
+  const [refreshing, setRefreshing] = useState(false);
+
+  const onRefresh = useCallback(
+    () => {
+      setRefreshing(true);
+      getTasks(dateSelected);
+      const animation = setTimeout(() => {
+        setRefreshing(false);
+        clearTimeout(animation);
+      }, 2000);
+    },
+    [dateSelected]
   );
 
-  const onRelease = (event: {
-    nativeEvent: {
-      translationX: number;
-    };
-  }) => {
-    if (event.nativeEvent.translationX < -60) {
-      // Swipe action detected, you can trigger any action here
-      Animated.timing(translateX, {
-        toValue: -120,
-        duration: 300,
-        useNativeDriver: true
-      }).start();
-    } else {
-      // Reset to initial position
-      Animated.timing(translateX, {
-        toValue: 0,
-        duration: 300,
-        useNativeDriver: true
-      }).start();
-    }
-  };
-
-  const handleDestroy = async (id: string | number) => {
-    await Task.destroy(id.toString());
-    onTaskIsDestroyed(id.toString());
-  };
-
-  return tasks.map((task, index) =>
-    <PanGestureHandler
-      key={index}
-      onGestureEvent={onGestureEvent}
-      onHandlerStateChange={e => {
-        setTaskSwiped(index);
-        onRelease(e);
-      }}
-    >
-      <Animated.View
-        style={{
-          flexDirection: "row",
-          alignItems: "center",
-          width: "100%",
-          transform: [
-            { translateX: index === taskSwiped ? translateX : 0 },
-            { translateY: 0 }
-          ]
-        }}
-      >
-        <TaskItem task={task} />
-        <TouchableOpacity
-          onPress={() => handleDestroy(task.id)}
-          style={{
-            width: 60,
-            height: 130,
-            alignItems: "center",
-            justifyContent: "center",
-            backgroundColor: Theme.red
-          }}
-        >
-          <Ionicons name="trash-outline" size={24} color={Theme.white} />
-        </TouchableOpacity>
-      </Animated.View>
-    </PanGestureHandler>
-  );
+  return <FlatList 
+    data={tasks}
+    keyExtractor={item => item.id.toString()}
+    renderItem={({item}) => <TaskItem task={item} onDestroy={onTaskIsDestroy}/>}
+    showsVerticalScrollIndicator={false}
+    onRefresh={onRefresh}
+    refreshing={refreshing}
+  />
 };
 
 export default TaskList;

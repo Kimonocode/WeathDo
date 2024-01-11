@@ -9,7 +9,6 @@ const NoTask3D = () => {
         height: 500,
         alignItems: "center",
         justifyContent: "center",
-        transform:[{translateX:-44}]
       }}
     >
       <Image

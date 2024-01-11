@@ -6,7 +6,9 @@ async function getTasksFromStore(
   date: number,
   callback: (tasks: TaskInterface[]) => void | ReactNode
 ) {
-  const tasks = await Task.all(date);
+  const tasks = await Task.all(date, error => {
+    
+  });
   !!tasks && callback(tasks);
 };
 
