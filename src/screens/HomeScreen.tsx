@@ -88,7 +88,7 @@ const TaskCategoryScrollBar: React.FC<TaskCategoryScrollBar> = ({
               return getTasksFromStore(dateSelected, tasks => onSetTask(tasks));
             }
             getTasksFromStore(dateSelected, tasks =>
-              onSetTask(
+              onSetTask( // filter tasks by category title for scroll bar app
                 tasks.filter(task => task.category.match(category.title))
               )
             );
