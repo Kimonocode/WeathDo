@@ -15,5 +15,13 @@ function truncate(str:string, char:number): string {
     return str.slice(0, char);
 }
 
+function noPluriel(str: string): string {
+    const last = str.substring(str.length -1);
+    if(last === 's'){
+        str = str.replace(last, '');
+    }
+    return str;
+}
 
-export { capitalize, truncate };
+
+export { capitalize, truncate, noPluriel };

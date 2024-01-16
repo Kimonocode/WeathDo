@@ -14,41 +14,77 @@ import Spacing from "../../../config/Spacing";
 import IconCategory from "./Categories/IconCategory";
 import { formatDaysInline } from "../../../funcs/dates";
 import NotificationIcon from "./Reminders/Notifications/NotificationIcon";
-import { capitalize } from "../../../funcs/strings";
+import { capitalize, noPluriel } from "../../../funcs/strings";
 import Swipeable from "react-native-gesture-handler/Swipeable";
-import { Feather } from '@expo/vector-icons';
+import { Feather } from "@expo/vector-icons";
 
 type Props = {
   task: TaskInterface;
-  onDestroy: (id: number | string ) => void
+  onDestroy: (id: number | string) => void;
 };
 
 const TaskItem: React.FC<Props> = ({ task, onDestroy }) => {
   const taskCategory: CategoryInterface | null = TaskCategory.findByTitle(
     task.category
-  ); 
+  );
 
   const renderRightAction = (
     progress: Animated.AnimatedInterpolation<number>,
     dragX: Animated.AnimatedInterpolation<number>
   ) => {
-    
+    const transform = dragX.interpolate({
+      inputRange: [-500, -300, -250, 0],
+      outputRange: [-350, 0, 20, 350]
+    });
+
     return (
-      <TouchableOpacity style={{
-        backgroundColor: Theme.red,
-        width:60,
-        height: 124,
-        alignItems: "center",
-        justifyContent: "center",
-      }} onPress={() => onDestroy(task.id.toString())}>
-        <Feather name="trash-2" size={24} color={Theme.white} />
-    </TouchableOpacity>
+      <Animated.View
+        style={{
+          backgroundColor: Theme.red,
+          width: 300,
+          height: 124,
+          alignItems: "flex-start",
+          justifyContent: "center",
+          transform: [{ translateX: transform }]
+        }}
+      >
+        <TouchableOpacity
+          onPress={() => onDestroy(task.id.toString())}
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            height: "100%",
+            width: "100%"
+          }}
+        >
+          <Feather
+            name="trash-2"
+            size={24}
+            color={Theme.white}
+            style={{
+              marginLeft: 60
+            }}
+          />
+          <Text
+            style={{
+              color: Theme.white,
+              fontSize: 20,
+              textTransform: "capitalize",
+              marginLeft: 8
+            }}
+          >
+            supprimer
+          </Text>
+        </TouchableOpacity>
+      </Animated.View>
     );
   };
 
-
   return (
-    <Swipeable renderRightActions={renderRightAction} containerStyle={styles.container}>
+    <Swipeable
+      renderRightActions={renderRightAction}
+      containerStyle={styles.container}
+    >
       <Text
         style={[styles.title, { marginBottom: task.description ? 0 : Spacing }]}
       >
@@ -131,6 +167,16 @@ const TaskItem: React.FC<Props> = ({ task, onDestroy }) => {
                         : capitalize(day)}
                     </Text>
                   )}
+                  {reminder.notification.interval.before &&
+                    <Text style={{ color: Theme.text }}>
+                      {reminder.notification.interval.beforeNumber}{" "}
+                      {reminder.notification.interval.beforeNumber > 1
+                        ? reminder.notification.interval.beforeInterval
+                        : noPluriel(
+                            reminder.notification.interval.beforeInterval
+                          )}{" "}
+                      avant
+                    </Text>}
                 </View>
               </View>
             )}
@@ -142,7 +188,7 @@ const TaskItem: React.FC<Props> = ({ task, onDestroy }) => {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor:Theme.bgDark,
+    backgroundColor: Theme.bgDark,
     padding: Spacing * 1.6,
     borderColor: Theme.darkConstart,
     borderBottomWidth: 1,
